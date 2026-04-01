@@ -7,15 +7,17 @@ import { type Supplier } from '../../types/Supplier/supplier';
 import EditSupplierForm from './EditSupplierForm';
 import { deleteSupplier } from '../../services/Supplier/supplierService';
 import ConfirmModal from '../ConfirmModal';
-
+import Pagination from '../Pagination';
 export default function SupplierPage() {
-  const { suppliers, loading, query, setQuery,status,setStatus ,refresh} = useSuppliers();
+  const { suppliers, loading, query, setQuery,status,setStatus,currentPage, setCurrentPage, pageSize,refresh} = useSuppliers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [targetSupplier, setTargetSupplier] = useState<Supplier | null>(null);
-
+  const indexOfLastItem = currentPage * pageSize;
+  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const currentItems = suppliers.slice(indexOfFirstItem, indexOfLastItem);
   const handleEdit = (supplier: Supplier) => {
   setSelectedSupplier(supplier);
   setIsEditOpen(true);
@@ -72,7 +74,7 @@ export default function SupplierPage() {
           ĐANG TẢI DỮ LIỆU...
         </div>
       ) : (
-        <SupplierTable data={suppliers} onEdit={handleEdit} onDelete={handleDeleteClick}/>
+        <SupplierTable data={currentItems} onEdit={handleEdit} onDelete={handleDeleteClick}/>
       )}
       <EditSupplierForm isOpen={isEditOpen} 
         onClose={() => {
@@ -83,6 +85,14 @@ export default function SupplierPage() {
         supplier={selectedSupplier} 
       />
     </div>
+    <div className={styles.paginationFooter}>
+        <Pagination 
+          currentPage={currentPage}
+          totalItems={suppliers.length}
+          pageSize={pageSize}
+          onPageChange={(p) => setCurrentPage(p)}
+        />
+      </div>
     <ConfirmModal 
         isOpen={isDeleteModalOpen}
         title={targetSupplier?.isActive ? "Xác nhận xóa" : "Xác nhận khôi phục"}

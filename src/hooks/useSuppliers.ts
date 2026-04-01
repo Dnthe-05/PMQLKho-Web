@@ -5,9 +5,10 @@ import { type Supplier } from '../types/Supplier/supplier';
 export const useSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
-  
+  const [query, setQuery] = useState('');  
   const [status, setStatus] = useState<boolean>(true); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
 const loadData = async (searchText: string, statusValue: boolean) => {
   try {
@@ -31,6 +32,7 @@ const loadData = async (searchText: string, statusValue: boolean) => {
     const timer = setTimeout(() => {
       loadData(query, status);
     }, 400);
+    setCurrentPage(1);
     return () => clearTimeout(timer);
   }, [query, status]);
 
@@ -41,6 +43,8 @@ const loadData = async (searchText: string, statusValue: boolean) => {
     setQuery,
     status,     
     setStatus,  
+    currentPage, setCurrentPage,
+    pageSize,
     refresh: () => loadData(query, status) 
   };
 };
