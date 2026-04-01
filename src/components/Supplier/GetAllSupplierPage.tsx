@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import AddSupplierForm from './AddSupplierForm';
 import styles from '../../css/Supplier/SupplierTable.module.css';
 import SupplierTable from './SupplierTable';
 import { useSuppliers } from '../../hooks/useSuppliers';
 
 export default function SupplierPage() {
-  const { suppliers, loading, query, setQuery,status,setStatus } = useSuppliers();
+  const { suppliers, loading, query, setQuery,status,setStatus ,refresh} = useSuppliers();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
     <div style={{ padding: '20px' }}>
       <h2 style={{ fontWeight: 900, marginBottom: '20px' }}>Quản Lý Nhà Cung Cấp</h2>
@@ -29,7 +32,8 @@ export default function SupplierPage() {
             <option value="true">Hoạt động</option>
             <option value="false">Ngừng hoạt động</option>
           </select>
-        <button className={styles.btnCreate}>+ Thêm nhà cung cấp</button>
+        <button className={styles.btnCreate} onClick={() => setIsModalOpen(true)}>+ Thêm nhà cung cấp</button>
+        <AddSupplierForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={refresh} />
       </div>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px', color: '#999', fontWeight: 'bold' }}>
