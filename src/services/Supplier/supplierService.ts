@@ -25,3 +25,9 @@ export const updateSupplier = async (id: number, data: any) => {
         throw error;
     }
 };
+
+// xóa mềm
+export const deleteSupplier = async (id: number) => {
+  const response = await axiosClient.patch(`/api/supplier/${id}`);
+  return response.data;
+};

@@ -1,13 +1,13 @@
 import React from 'react';
 import {type Supplier } from '../../types/Supplier/supplier';
 import styles from '../../css/Supplier/SupplierTable.module.css';
-
 interface SupplierTableProps {
   data: Supplier[];
   onEdit: (item: Supplier) => void;
+  onDelete: (item: Supplier) => void;
 }
 
-const SupplierTable: React.FC<SupplierTableProps> = ({ data,onEdit }) => {
+const SupplierTable: React.FC<SupplierTableProps> = ({ data,onEdit,onDelete }) => {
   return (
     <div className={styles.tableCard}>
       <table className={styles.table}>
@@ -61,12 +61,25 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ data,onEdit }) => {
                       </svg>
                     </button>
 
-                      <button className={`${styles.btnAction} ${styles.btnDelete}`} title="Xóa tạm thời">
+                      <button 
+                      className={`${styles.btnAction} ${item.isActive ? styles.btnDelete : styles.btnRestore}`} 
+                      title={item.isActive ? "Xóa tạm thời" : "Khôi phục"}
+                      onClick={() => onDelete(item)}
+                    >
+                      {item.isActive ? (
+                        /* Icon Thùng rác */
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
-                      </button>
+                      ) : (
+                        /* Icon Khôi phục (Xoay ngược) */
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10"></polyline>
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                      )}
+                    </button>
                     </div>
                 </td>
               </tr>
