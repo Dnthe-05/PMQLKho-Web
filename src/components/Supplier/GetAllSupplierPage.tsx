@@ -3,10 +3,18 @@ import AddSupplierForm from './AddSupplierForm';
 import styles from '../../css/Supplier/SupplierTable.module.css';
 import SupplierTable from './SupplierTable';
 import { useSuppliers } from '../../hooks/useSuppliers';
+import { type Supplier } from '../../types/Supplier/supplier';
+import EditSupplierForm from './EditSupplierForm';
 
 export default function SupplierPage() {
   const { suppliers, loading, query, setQuery,status,setStatus ,refresh} = useSuppliers();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const handleEdit = (supplier: Supplier) => {
+  setSelectedSupplier(supplier);
+  setIsEditOpen(true);
+}
   return (
     <div style={{ padding: '20px' }}>
       <h2 style={{ fontWeight: 900, marginBottom: '20px' }}>Quản Lý Nhà Cung Cấp</h2>
@@ -40,8 +48,16 @@ export default function SupplierPage() {
           ĐANG TẢI DỮ LIỆU...
         </div>
       ) : (
-        <SupplierTable data={suppliers} />
+        <SupplierTable data={suppliers} onEdit={handleEdit}/>
       )}
+      <EditSupplierForm isOpen={isEditOpen} 
+        onClose={() => {
+          setIsEditOpen(false);
+          setSelectedSupplier(null);
+        }} 
+        onSuccess={refresh} 
+        supplier={selectedSupplier} 
+      />
     </div>
   );
 }
