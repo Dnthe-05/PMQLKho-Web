@@ -43,7 +43,7 @@ export default function SupplierPage() {
   return (
     <>
     <div style={{ padding: '20px' }}>
-      <h2 style={{ fontWeight: 900, marginBottom: '20px' }}>Quản Lý Nhà Cung Cấp</h2>
+      <h2 style={{ fontWeight: 900, marginBottom: '20px', width: '100%' }}>Quản Lý Nhà Cung Cấp</h2>
 
       <div className={styles.topActions}>
         <div className={styles.searchBox}>

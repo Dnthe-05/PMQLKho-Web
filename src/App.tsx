@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import GettAllSupplierPage from './components/Supplier/GetAllSupplierPage';
+// import GetAllProductPage from './components/Product/GetAllProductPage';
 
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -27,6 +28,11 @@ const App = () => {
           </MainLayout>
         } />
         
+        {/* <Route path="/hang-hoa" element={
+          <MainLayout currentPage="GOODS">
+            <GetAllProductPage />
+          </MainLayout>
+        } /> */}
         {/* Bạn có thể thêm các trang Khách hàng, Hàng hóa... tương tự ở đây */}
       </Routes>
     </Router>
