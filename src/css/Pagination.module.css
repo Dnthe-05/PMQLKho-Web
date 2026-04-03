@@ -1,0 +1,69 @@
+/* CSS cho Wrapper tổng */
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px; /* Khoảng cách vừa phải giữa các nút */
+  margin-top: 25px;
+  margin-bottom: 10px;
+}
+
+/* Style chung cho các nút bấm */
+.pageBtn {
+  min-width: 38px; /* Đảm bảo nút luôn là hình vuông nếu số có 1-2 chữ số */
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  color: #444;
+  cursor: pointer;
+  border-radius: 6px; /* Bo góc nhẹ nhìn hiện đại hơn */
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none; /* Ngăn bôi đen khi click nhanh */
+}
+
+/* Hiệu ứng hover */
+.pageBtn:hover:not(:disabled):not(.active) {
+  background-color: #f8f9fa;
+  border-color: #d93025; /* Đổi màu viền sang đỏ nhẹ khi hover */
+  color: #d93025;
+}
+
+/* Trạng thái trang đang chọn (Active) */
+.pageBtn.active {
+  background-color: #d93025;
+  color: white;
+  border-color: #d93025;
+  cursor: default;
+  box-shadow: 0 2px 4px rgba(217, 48, 37, 0.3); /* Đổ bóng nhẹ cho nút đang chọn */
+}
+
+/* Trạng thái bị vô hiệu hóa (Disabled) */
+.pageBtn:disabled {
+  color: #ccc;
+  background-color: #fcfcfc;
+  border-color: #eee;
+  cursor: not-allowed;
+}
+
+/* Style riêng cho dấu "..." */
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  color: #999;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Tùy chỉnh riêng cho các nút chữ "Trước", "Sau" nếu muốn nó rộng hơn */
+.pageBtn:first-child, 
+.pageBtn:last-child {
+  font-size: 16px; /* Cho icon « » to hơn một chút */
+}

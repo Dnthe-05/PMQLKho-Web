@@ -5,33 +5,36 @@ import { type Supplier } from '../types/Supplier/supplier';
 export const useSuppliers = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
-  
+  const [query, setQuery] = useState('');  
   const [status, setStatus] = useState<boolean>(true); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-  const loadData = async (searchText: string, statusValue: boolean) => {
-    try {
-      setLoading(true);
-      // Gọi service với searchText và statusValue
-      const res = await getSuppliers(searchText, statusValue);
-      
-      if (res.success) {
-        setSuppliers(res.data);
-      }
-    } catch (error) {
-      console.error("Lỗi tải dữ liệu:", error);
-    } finally {
-      setLoading(false);
+const loadData = async (searchText: string, statusValue: boolean) => {
+  try {
+    setLoading(true);
+    const res = await getSuppliers(searchText, statusValue);
+    
+    if (Array.isArray(res)) {
+      setSuppliers(res);
+    } else if (res && (res as any).data) { 
+      setSuppliers((res as any).data);
     }
-  };
+    
+  } catch (error) {
+    console.error("Lỗi tải dữ liệu:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Luôn truyền giá trị mới nhất của query và status
       loadData(query, status);
     }, 400);
+    setCurrentPage(1);
     return () => clearTimeout(timer);
-  }, [query, status]); // Lắng nghe cả 2 thay đổi
+  }, [query, status]);
 
   return {
     suppliers,
@@ -40,6 +43,8 @@ export const useSuppliers = () => {
     setQuery,
     status,     
     setStatus,  
+    currentPage, setCurrentPage,
+    pageSize,
     refresh: () => loadData(query, status) 
   };
 };

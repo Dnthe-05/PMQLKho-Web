@@ -162,3 +162,10 @@
 .btnDelete:hover {
   color: #ef4444; /* Đỏ */
 }
+.btnRestore {
+    color: #4A90E2; /* Màu xanh dương */
+    border-color: #4A90E2;
+}
+.btnRestore:hover {
+    background-color: #eef6ff;
+}
