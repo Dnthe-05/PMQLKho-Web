@@ -1,65 +1,82 @@
 import React from 'react';
 import { type Product } from '../../types/Product/product';
-import styles from '../../css/Supplier/SupplierTable.module.css'; 
+import styles from '../../css/Product/ProductTable.module.css';
 
 interface ProductTableProps {
-  products: Product[]; // Đã sửa tên từ data thành products
-  onEdit: (item: Product) => void;
-  onDelete: (item: Product) => void;
+  data: Product[];
+  loading: boolean;
 }
 
-const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete }) => {
+
+const ProductTable: React.FC<ProductTableProps> = ({ data, loading }) => {
+  const safeData = data || [];
+
   return (
-    <div className={styles.tableCard}>
+    <div className={styles.tableContainer}>
       <table className={styles.table}>
-        <thead>
-          <tr className={styles.thRow}>
-            <th className={styles.th}>STT</th>
-            <th className={styles.th}>Hình ảnh</th>
-            <th className={styles.th}>SKU</th>
-            <th className={styles.th}>Tên sản phẩm</th>
-            <th className={styles.th}>Giá nhập</th>
-            <th className={styles.th}>Giá xuất</th>
-            <th className={styles.th}>Tồn kho</th>
-            <th className={styles.th}>Danh mục</th>
-            <th className={styles.th}>Hành động</th>
+        <thead className={styles.thead}>
+          <tr>
+            <th className={styles.th} style={{ width: '80px', textAlign: 'center' }}>Ảnh</th>
+            <th className={styles.th}>Sản phẩm / SKU</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Danh mục / Nhãn</th>
+            <th className={styles.th} style={{ textAlign: 'right' }}>Giá Bán / Nhập</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Tồn kho</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Đơn vị / Vị trí</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Hoạt động</th>
           </tr>
         </thead>
         <tbody>
-          {products.length > 0 ? (
-            products.map((item, index) => (
-              <tr key={item.id} className={styles.tr}>
-                <td className={styles.td}><div>{index + 1}</div></td>
-                <td className={styles.td}>
-                  <img 
-                    src={item.image || 'https://via.placeholder.com/45'} 
-                    alt={item.name} 
-                    style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                  />
-                </td>
-                <td className={styles.td} style={{ fontWeight: 'bold' }}>{item.sku}</td>
-                <td className={styles.td} style={{ textAlign: 'left' }}>{item.name}</td>
-                <td className={styles.td}>{item.importPrice.toLocaleString('vi-VN')} đ</td>
-                <td className={styles.td} style={{ color: '#F23A3A', fontWeight: 'bold' }}>
-                    {item.exportPrice.toLocaleString('vi-VN')} đ
-                </td>
-                <td className={styles.td}>{item.stockQuantity}</td>
-                <td className={styles.td}>{item.categoryName}</td>
-                <td className={styles.td}>
-                  <div className={styles.actionWrapper}>
-                    <button className={`${styles.btnAction} ${styles.btnEdit}`} onClick={() => onEdit(item)}>
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                    <button className={`${styles.btnAction} ${styles.btnDelete}`} onClick={() => onDelete(item)}>
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={9} style={{textAlign: 'center', padding: '20px'}}>Không có sản phẩm nào.</td></tr>
-          )}
+          {safeData.map((item: any) => (
+            <tr key={item.id} className={styles.tr}>
+              {/* Cột Ảnh */}
+              <td className={styles.td} style={{ textAlign: 'center' }}>
+                <img src={item.image || 'https://via.placeholder.com/44'} className={styles.productImg} alt="product" />
+              </td>
+
+              {/* Cột Tên & SKU */}
+              <td className={styles.td}>
+                <div style={{ fontWeight: 600, color: '#262626' }}>{item.name}</div>
+                <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{item.sku}</div>
+              </td>
+
+              {/* Cột Danh mục & Nhãn hàng */}
+              <td className={styles.td} style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: 500 }}>{item.categoryName}</div>
+                <div style={{ fontSize: '12px', color: '#bfbfbf' }}>{item.brandName || '---'}</div>
+              </td>
+
+              {/* Cột GIÁ (Vốn/Bán) - Chỗ con cần đây! */}
+              <td className={styles.td} style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, color: '#f5222d' }}>
+                   {item.exportPrice?.toLocaleString()}đ
+                </div>
+                <div style={{ fontSize: '12px', color: '#8c8c8c', textDecoration: 'none' }}>
+                   Vốn: {item.importPrice?.toLocaleString()}đ
+                </div>
+              </td>
+
+              {/* Cột Tồn kho */}
+              <td className={styles.td} style={{ textAlign: 'center' }}>
+                <span className={styles.stockBadge} style={{ background: '#E6F7FF', color: '#1890FF' }}>
+                  {item.stockQuantity}
+                </span>
+              </td>
+
+              {/* Cột Đơn vị & Vị trí */}
+              <td className={styles.td} style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: 500 }}>{item.unitName}</div>
+                <div style={{ fontSize: '11px', color: '#bfbfbf' }}>{item.location || 'Kho A'}</div>
+              </td>
+
+              {/* Hoạt động */}
+              <td className={styles.td} style={{ textAlign: 'center' }}>
+                <div className="flex justify-center gap-2">
+                  <button className={styles.actionBtn}>Sửa</button>
+                  <button className={styles.actionBtn} style={{ color: '#ff4d4f' }}>Xóa</button>
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

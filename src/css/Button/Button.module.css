@@ -1,0 +1,43 @@
+.btnCreate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: #F23A3A; /* Đỏ thương hiệu CAG PRO */
+    color: #ffffff;
+    padding: 12px 28px;
+    border-radius: 16px; /* Bo góc lớn đồng bộ với Search bar */
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px -6px rgba(242, 58, 58, 0.4); /* Đổ bóng có màu cực sang */
+    white-space: nowrap;
+    flex-shrink: 0; /* Quan trọng: Ngăn nút bị Search bar ép dẹp lép */
+}
+
+.btnCreate:hover {
+    background-color: #D32F2F;
+    transform: translateY(-2px); /* Nhích nhẹ lên khi hover */
+    box-shadow: 0 12px 24px -8px rgba(242, 58, 58, 0.6);
+}
+
+.btnCreate:active {
+    transform: translateY(0);
+    scale: 0.96; /* Hiệu ứng nhấn nút thực tế */
+}
+
+.icon {
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+/* Option: Nếu sau này con muốn làm nút màu trắng viền đỏ */
+.btnOutline {
+    background-color: #ffffff;
+    color: #F23A3A;
+    border: 2px solid #F23A3A;
+    box-shadow: none;
+}
