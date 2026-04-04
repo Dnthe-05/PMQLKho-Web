@@ -1,0 +1,188 @@
+/* =========================================
+   1. PHẦN PAGE (Thanh công cụ: Search, Filter, Nút Thêm)
+   ========================================= */
+
+.pageContainer {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Màu nền xám nhạt */
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24px;
+  margin-top: 0;
+}
+.topActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px; 
+}
+
+/* Thêm class này để bọc ô Search và Filter lại với nhau ở bên trái */
+.leftActions {
+  display: flex;
+  align-items: center;
+  gap: 15px; 
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 8px 15px; 
+  border-radius: 10px; 
+  width: 400px; /* Thu lại một chút để chừa chỗ cho Filter */
+  border: 1px solid #eee;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px; 
+  background: transparent;
+}
+
+.statusFilter {
+  height: 36px; /* Cân bằng chiều cao với ô Search */
+  padding: 0 15px;
+  border: 1px solid #eee;
+  border-radius: 10px; 
+  background-color: #fff;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  min-width: 160px;
+  outline: none;
+  transition: all 0.3s ease;
+  
+  /* Xóa mũi tên mặc định và dùng icon SVG */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 10px auto;
+  padding-right: 30px; 
+}
+
+.statusFilter:hover, 
+.statusFilter:focus {
+  border-color: #F23A3A; /* Đổi màu xanh thành màu đỏ thương hiệu của bạn */
+  box-shadow: 0 0 0 3px rgba(242, 58, 58, 0.1);
+}
+
+.btnCreate {
+  background-color: #fff;
+  color: #F23A3A;
+  border: 1px solid #F23A3A;
+  padding: 10px 20px; 
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCreate:hover {
+  background-color: #F23A3A;
+  color: #fff;
+}
+
+
+/* =========================================
+   2. PHẦN TABLE (Bảng dữ liệu và thao tác)
+   ========================================= */
+
+.tableCard {
+  background-color: #fff;
+  border-radius: 15px; 
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.thRow {
+  background-color: #F23A3A;
+  color: #fff;
+}
+
+.th {
+  padding: 15px; 
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tr {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.tr:hover {
+  background-color: #f9fafb; /* Thêm hiệu ứng hover cho từng dòng */
+}
+
+.td {
+  padding: 12px; 
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+}
+
+/* Tiện ích dùng chung */
+.imgBox {
+  width: 35px;
+  height: 35px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+}
+
+.actionWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px; 
+}
+
+.btnAction {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer; 
+  color: #94a3b8; 
+}
+
+.btnAction.btnEdit:hover { color: #3b82f6; }
+.btnAction.btnDelete:hover { color: #ef4444; }
+
+.btnRestore {
+  color: #4A90E2; 
+  border: 1px solid #4A90E2;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.btnRestore:hover {
+  background-color: #eef6ff;
+}
