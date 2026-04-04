@@ -1,12 +1,13 @@
 import React from 'react';
 import {type Supplier } from '../../types/Supplier/supplier';
-import styles from '../../css/Supplier/SupplierTable.module.css';
-
+import styles from '../../css/SharedLayout.module.css'; 
 interface SupplierTableProps {
   data: Supplier[];
+  onEdit: (item: Supplier) => void;
+  onDelete: (item: Supplier) => void;
 }
 
-const SupplierTable: React.FC<SupplierTableProps> = ({ data }) => {
+const SupplierTable: React.FC<SupplierTableProps> = ({ data,onEdit,onDelete }) => {
   return (
     <div className={styles.tableCard}>
       <table className={styles.table}>
@@ -49,19 +50,34 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ data }) => {
                 </td>
                 <td className={styles.td}>
                     <div className={styles.actionWrapper}>
-                      <button className={`${styles.btnAction} ${styles.btnEdit}`} title="Cập nhật">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </button>
+                      <button 
+                      className={`${styles.btnAction} ${styles.btnEdit}`} 
+                      onClick={() => onEdit(item)}
+                      title="Cập nhật"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
 
-                      <button className={`${styles.btnAction} ${styles.btnDelete}`} title="Xóa tạm thời">
+                      <button 
+                      className={`${styles.btnAction} ${item.isActive ? styles.btnDelete : styles.btnRestore}`} 
+                      title={item.isActive ? "Xóa tạm thời" : "Khôi phục"}
+                      onClick={() => onDelete(item)}
+                    >
+                      {item.isActive ? (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
-                      </button>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10"></polyline>
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                      )}
+                    </button>
                     </div>
                 </td>
               </tr>

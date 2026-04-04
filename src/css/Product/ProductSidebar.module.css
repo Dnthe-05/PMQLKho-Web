@@ -1,0 +1,96 @@
+.sidebarContainer {
+    width: 300px; 
+    height: calc(100vh - 32px); 
+    padding: 24px;
+    background-color: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 24px; 
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+}
+.stickyWrapper {
+    position: sticky;
+    top: 20px;
+}
+
+.title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+}
+
+.filterGroup {
+    margin-bottom: 20px; /* Khoảng cách giữa các ô lọc xa nhau hơn */
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+}
+
+.inputField {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px; /* Bo góc cho ô input */
+    background-color: #f9fafb;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.inputField:focus {
+    border-color: #3b82f6;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.checkboxContainer {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f9fafb;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: background-color 0.2s;
+}
+
+.checkboxContainer:hover {
+    background-color: #f3f4f6;
+}
+
+.btnReset {
+    width: 100%;
+    background-color: #ffffff;
+    color: #ef4444;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1.5px solid #fee2e2;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btnReset:hover {
+    background-color: #fef2f2;
+    border-color: #ef4444;
+    transform: translateY(-1px);
+}

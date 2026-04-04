@@ -1,15 +1,9 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // Thêm import này
+import { NavLink } from 'react-router-dom';
 import styles from '../css/Main/MainLayout.module.css';
+import Header from './Header';
 
-const Logo = () => (
-  <div className={styles.logoWrapper}>
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="#E31E24">
-      <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
-    </svg>
-    <span className={styles.logoText}>CAG PRO</span>
-  </div>
-);
+
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,35 +13,24 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className={styles.container}>
-      {/* HEADER */}
-      <header className={styles.topHeader}>
-        <Logo />
-        <div className={styles.headerRight}>
-          <span className={styles.bellIcon}>🔔</span>
-          <div className={styles.userCircle}>👤</div>
-        </div>
-      </header>
+      
+      {/* 1. Gọi Component Header đã tách ở đây */}
+      <Header />
 
-{/* NAV BAR */}
+      {/* 2. NAV BAR - Giữ nguyên phần này */}
       <nav className={styles.navBar}>
         <div className={styles.navLinks}>
-          
           <NavLink to="/tong-quan" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Tổng quan</NavLink>
-       
           <NavLink to="/hang-hoa" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Hàng hóa</NavLink>
-
           <NavLink to="/kho-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}> Kho hàng</NavLink>
-
           <NavLink to="/bao-hanh" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Bảo hành</NavLink>
-
-          <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>NCC</NavLink>
-
+          <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhà cung cấp</NavLink>
           <NavLink to="/khach-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Khách hàng</NavLink>
-          
           <NavLink to="/nhan-vien" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhân viên</NavLink>
         </div>
       </nav>
 
+      {/* 3. PHẦN NỘI DUNG CHÍNH */}
       <main className={styles.mainWrapper}>
         <div className={styles.contentArea}>
           {children}
