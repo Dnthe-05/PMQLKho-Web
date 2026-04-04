@@ -9,6 +9,10 @@ export const getProducts = async (filters: any): Promise<any> => {
     return response.data; 
 };
 
+export const createProduct = async (data: any) => {
+    return await axiosClient.post("/api/product", data);
+};
+
 // Get data api from category
 export const getCategories = async (): Promise<string[]> => {
     const response = await axiosClient.get("/api/category");
