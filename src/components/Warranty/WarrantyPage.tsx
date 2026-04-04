@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import styles from '../../css/SharedLayout.module.css'; 
 import WarrantyTable from './WarrantyTable';
 import Pagination from '../Pagination';
 import { useWarranties } from '../../hooks/useWarranties';
+import AddWarrantyForm from './AddWarrantyFrom';
 
 export default function WarrantyPage() {
   const { 
     warranties, loading, query, setQuery, status, setStatus, 
-    currentPage, setCurrentPage, pageSize 
+    currentPage, setCurrentPage, pageSize, refresh 
   } = useWarranties();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const indexOfLastItem = currentPage * pageSize;
   const indexOfFirstItem = indexOfLastItem - pageSize;
   const safeWarranties = Array.isArray(warranties) ? warranties : [];
@@ -45,11 +49,16 @@ export default function WarrantyPage() {
           </select>
         </div>
 
-        <button className={styles.btnCreate}>
-          + Tạo phiếu bảo hành
-        </button>
-      </div>
-
+        <button className={styles.btnCreate} onClick={() => setIsModalOpen(true)}>
+            + Tạo phiếu bảo hành
+          </button>
+          
+          <AddWarrantyForm 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+           onSuccess={refresh}
+          />
+        </div>
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>Đang tải...</div>
       ) : (

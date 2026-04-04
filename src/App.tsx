@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './layouts/MainLayout';
 import GettAllSupplierPage from './components/Supplier/GetAllSupplierPage';
 import GetAllProductPage from './components/Product/GetAllProductPage';
+// import GetAllProductPage from './components/Product/GetAllProductPage';
+import WarrantyDetailPage from './components/Warranty/WarrantyDetailPage';
 import WarrantyPage from './components/Warranty/WarrantyPage';
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -38,6 +40,7 @@ const App = () => {
             <WarrantyPage/>
           </MainLayout>
         } />
+        <Route path="/bao-hanh/chi-tiet/:id" element={<WarrantyDetailPage />} />
       </Routes>
     </Router>
   );
