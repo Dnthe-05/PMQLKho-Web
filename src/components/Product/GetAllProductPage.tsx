@@ -3,6 +3,7 @@ import { getProducts } from '../../services/Product/productService';
 import { type Product } from '../../types/Product/product';
 import { type ProductFilter } from '../../types/Product/productFilter';
 import { type ProductResponse } from '../../types/Product/productResponse';
+import AddProductForm from './AddProductform';
 import ProductTable from './ProductTable';
 import ProductSidebar from './ProductSidebar';
 import Button from '../Common/Button';
@@ -12,6 +13,7 @@ const GetAllProductPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<ProductFilter>({});
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Trạng thái phân trang
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,9 +76,10 @@ const fetchProducts = async () => {
             </div>
           </div>
 
+          {/* Nút bấm mở Modal thêm sản phẩm */}
           <Button 
             text="Thêm sản phẩm mới" 
-            onClick={() => console.log("Mở form thêm sản phẩm")} 
+            onClick={() => setIsModalOpen(true)} 
           />
         </div>
         
@@ -97,6 +100,16 @@ const fetchProducts = async () => {
           )}
         </div>
       </div>
+
+      {/* Form thêm sản phẩm mới (Modal) */}
+      <AddProductForm 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={() => {
+          fetchProducts(); 
+          setIsModalOpen(false);
+        }} 
+      />
     </div>
   );
 };
