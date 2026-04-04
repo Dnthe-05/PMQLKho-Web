@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AddSupplierForm from './AddSupplierForm';
-import styles from '../../css/Supplier/SupplierTable.module.css';
+import styles from '../../css/SharedLayout.module.css'; 
 import SupplierTable from './SupplierTable';
 import { useSuppliers } from '../../hooks/useSuppliers';
 import { type Supplier } from '../../types/Supplier/supplier';
@@ -15,8 +15,10 @@ export default function SupplierPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [targetSupplier, setTargetSupplier] = useState<Supplier | null>(null);
+  //dữ liệu
   const indexOfLastItem = currentPage * pageSize;
   const indexOfFirstItem = indexOfLastItem - pageSize;
+  const safesupplier = Array.isArray(suppliers) ? suppliers : [];
   const currentItems = suppliers.slice(indexOfFirstItem, indexOfLastItem);
   const handleEdit = (supplier: Supplier) => {
   setSelectedSupplier(supplier);
@@ -42,12 +44,12 @@ export default function SupplierPage() {
   };
   return (
     <>
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ fontWeight: 900, marginBottom: '20px', width: '100%' }}>Quản Lý Nhà Cung Cấp</h2>
+    <div className={styles.pageContainer}>
+      <h2 className={styles.pageTitle}>Quản Lý Nhà Cung Cấp</h2>
 
       <div className={styles.topActions}>
+        <div className={styles.leftActions}>
         <div className={styles.searchBox}>
-          <span style={{ color: '#4A90E2', marginRight: '10px' }}>🔍</span>
           <input 
             type="text" 
             placeholder="Tìm theo mã, tên NCC, SĐT, ..." 
@@ -56,8 +58,9 @@ export default function SupplierPage() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+        
           <select
-              className={styles.statusFilter} 
+              className={styles.statusFilter}
               value={status.toString()} 
               onChange={(e) => {
               setStatus(e.target.value === "true");
@@ -66,6 +69,7 @@ export default function SupplierPage() {
             <option value="true">Hoạt động</option>
             <option value="false">Ngừng hoạt động</option>
           </select>
+        </div>
         <button className={styles.btnCreate} onClick={() => setIsModalOpen(true)}>+ Thêm nhà cung cấp</button>
         <AddSupplierForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={refresh} />
       </div>
@@ -88,7 +92,7 @@ export default function SupplierPage() {
     <div className={styles.paginationFooter}>
         <Pagination 
           currentPage={currentPage}
-          totalItems={suppliers.length}
+          totalItems={safesupplier.length}
           pageSize={pageSize}
           onPageChange={(p) => setCurrentPage(p)}
         />

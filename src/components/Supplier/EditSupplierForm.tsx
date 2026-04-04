@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../../css/Supplier/SupplierForm.module.css'; 
+import styles from '../../css/SharedForm.module.css'; 
 import { updateSupplier } from '../../services/Supplier/supplierService';
 import ConfirmModal from '../ConfirmModal';
 

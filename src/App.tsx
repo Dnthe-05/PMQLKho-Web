@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './layouts/MainLayout';
 import GettAllSupplierPage from './components/Supplier/GetAllSupplierPage';
 import GetAllProductPage from './components/Product/GetAllProductPage';
-
+import WarrantyPage from './components/Warranty/WarrantyPage';
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
     <h2>Chào mừng đến với hệ thống CAG PRO</h2>
@@ -27,13 +27,17 @@ const App = () => {
             <GettAllSupplierPage />
           </MainLayout>
         } />
-        
         <Route path="/hang-hoa" element={
           <MainLayout currentPage="GOODS">
             <GetAllProductPage />
           </MainLayout>
         } />
         {/* Bạn có thể thêm các trang Khách hàng, Hàng hóa... tương tự ở đây */}
+        <Route path="/bao-hanh" element={
+          <MainLayout currentPage="Bảo Hành">
+            <WarrantyPage/>
+          </MainLayout>
+        } />
       </Routes>
     </Router>
   );
