@@ -10,12 +10,10 @@ export default function WarrantyDetailPage() {
   const [warranty, setWarranty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Gọi API lấy dữ liệu khi trang vừa load
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         const response = await getWarrantyById(Number(id));
-        // Tùy vào cấu trúc BE, có thể là response.data hoặc response.data.data
         setWarranty(response.data?.data || response.data);
       } catch (error) {
         console.error("Lỗi tải chi tiết:", error);
@@ -31,7 +29,6 @@ export default function WarrantyDetailPage() {
   if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Đang tải dữ liệu...</div>;
   if (!warranty) return <div style={{ padding: '50px', textAlign: 'center' }}>Không có dữ liệu!</div>;
 
-  // Hàm render trạng thái giống hệt bên Table
   const renderStatus = (status: number) => {
     switch (status) {
       case 1: return <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold' }}>Tiếp nhận</span>;
@@ -46,10 +43,9 @@ export default function WarrantyDetailPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Nút quay lại & Tiêu đề */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
         <button 
-          onClick={() => navigate(-1)} // Quay lại trang trước
+          onClick={() => navigate(-1)}
           style={{ padding: '8px 15px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           &#8592; Quay lại
@@ -63,7 +59,7 @@ export default function WarrantyDetailPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        {/* Card: Thông tin khách hàng */}
+        
         <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>👤 Thông tin khách hàng</h3>
           <p><strong>Tên khách hàng:</strong> {warranty.customer?.customerName || warranty.customerName}</p>
@@ -71,7 +67,6 @@ export default function WarrantyDetailPage() {
           <p><strong>Địa chỉ:</strong> {warranty.customer?.address || warranty.address || '---'}</p>
         </div>
 
-        {/* Card: Thông tin tiếp nhận */}
         <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>📅 Thông tin tiếp nhận</h3>
           <p><strong>Ngày nhận:</strong> {formatDate(warranty.receiveDate)}</p>
@@ -80,17 +75,17 @@ export default function WarrantyDetailPage() {
         </div>
       </div>
 
-      {/* Bảng Danh sách sản phẩm lỗi (Details) */}
       <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>🛠️ Chi tiết thiết bị bảo hành</h3>
-        
         <table className={styles.table} style={{ width: '100%', marginTop: '15px' }}>
           <thead>
             <tr className={styles.thRow}>
               <th className={styles.th}>STT</th>
-              <th className={styles.th}>Mã Serial (ID)</th>
+              <th className={styles.th}>Mã Serial</th>
+              <th  className={styles.th}>Tên Sản Phẩm</th>
               <th className={styles.th}>Tình trạng lỗi</th>
               <th className={styles.th}>Ngày gửi hãng</th>
+              <th className={styles.th}>Ngày Trả từ hãng</th>
               <th className={styles.th}>Chi phí (VNĐ)</th>
             </tr>
           </thead>
@@ -99,9 +94,11 @@ export default function WarrantyDetailPage() {
               warranty.details.map((item: any, index: number) => (
                 <tr key={index} className={styles.tr}>
                   <td className={styles.td}>{index + 1}</td>
-                  <td className={styles.td}><strong>{item.serialNumberId}</strong></td>
+                  <td className={styles.td}><strong>{item.serialCode || 'N/A'}</strong></td>
+                  <td className={styles.td}><strong>{item.productName || 'Chưa xác định'}</strong></td>
                   <td className={styles.td}>{item.issueDescription || '---'}</td>
-                  <td className={styles.td}>{formatDate(item.warrantySentDate || item.sentToVendorDate)}</td>
+                  <td className={styles.td}>{formatDate(item.warrantySentDate)}</td>
+                  <td className={styles.td}>{formatDate(item.returnFromVendorDate)}</td>
                   <td className={styles.td} style={{ color: '#e31e24', fontWeight: 'bold' }}>
                     {item.warrantyCost ? item.warrantyCost.toLocaleString('vi-VN') : '0'} ₫
                   </td>
