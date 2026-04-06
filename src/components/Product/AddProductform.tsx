@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../../css/SharedForm.module.css'; 
+import styles from '../../css/Product/AddProductForm.module.css'; 
 import { createProduct, getCategories, getBrands, getUnits } from '../../services/Product/productService';
 
 interface Props {
@@ -9,50 +9,53 @@ interface Props {
 }
 
 export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
-  // 1. Khai báo State cho các danh sách chọn (Sửa lỗi "Cannot find name 'units'")
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
-  
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
-    Sku: '', Name: '', Location: '',
-    ImportPrice: 0, ExportPrice: 0, StockQuantity: 0,
-    CategoryId: '', BrandId: '', UnitId: '', Image: '' 
+    Sku: '', 
+    Name: '', 
+    Location: '',
+    ImportPrice: 0, 
+    ExportPrice: 0, 
+    StockQuantity: 0,
+    CategoryId: '', 
+    BrandId: '', 
+    UnitId: '', 
+    Image: '' 
   });
 
-  // 2. Fetch dữ liệu khi mở Modal
   useEffect(() => {
     if (isOpen) {
       const loadData = async () => {
-    try {
-        const [c, b, u] = await Promise.all([
-            getCategories() as any, 
-            getBrands() as any, 
-            getUnits() as any
-        ]);
-        setCategories(c.data || c);
-        setBrands(b.data || b);
-        setUnits(u.data || u);
-    } catch (err) {
-        console.error("Lỗi load dữ liệu:", err);
-    }
-};
+        try {
+          const [c, b, u]: any = await Promise.all([
+            getCategories(), 
+            getBrands(), 
+            getUnits()
+          ]);
+          setCategories(c.data || c);
+          setBrands(b.data || b);
+          setUnits(u.data || u);
+        } catch (err) {
+          console.error("Lỗi load dữ liệu:", err);
+        }
+      };
       loadData();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); 
-    }
+  const formatNumber = (value: number | string) => {
+    if (!value) return "";
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const parseNumber = (value: string) => {
+    return Number(value.replace(/\./g, ""));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,18 +63,14 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
     setFieldErrors({});
 
     try {
-      let imageUrl = formData.Image;
-
-      // Bước xử lý ảnh (Tạm thời dán link hoặc logic upload)
-      if (selectedFile) {
-        // Sau này con thêm logic upload API ở đây
-        imageUrl = selectedFile.name; // Tạm thời lấy tên file để test
+      let finalImageUrl = formData.Image?.trim();
+      if (!finalImageUrl) {
+        finalImageUrl = '/logo.png';
       }
 
       const finalData = { 
         ...formData, 
-        Image: imageUrl,
-        // Ép kiểu chuẩn cho Backend
+        Image: finalImageUrl,
         ImportPrice: Number(formData.ImportPrice),
         ExportPrice: Number(formData.ExportPrice),
         StockQuantity: Number(formData.StockQuantity),
@@ -80,63 +79,62 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
         UnitId: Number(formData.UnitId)
       };
 
-      const res: any = await createProduct(finalData); // Ép kiểu any để tránh lỗi .success
-      if (res && res.success) {
+      const res: any = await createProduct(finalData);
+      
+      if (res) {
         alert("Thêm sản phẩm thành công!");
         onSuccess();
         onClose();
-        // Reset form
-        setFormData({ Sku: '', Name: '', Location: '', ImportPrice: 0, ExportPrice: 0, StockQuantity: 0, CategoryId: '', BrandId: '', UnitId: '', Image: '' });
-        setPreviewUrl('');
-        setSelectedFile(null);
+        setFormData({ 
+          Sku: '', Name: '', Location: '', 
+          ImportPrice: 0, ExportPrice: 0, StockQuantity: 0, 
+          CategoryId: '', BrandId: '', UnitId: '', Image: '' 
+        });
       }
     } catch (error: any) {
       const serverData = error.response?.data;
       if (serverData?.errors) setFieldErrors(serverData.errors);
-      else alert("Có lỗi xảy ra khi lưu!");
+      else alert("Lỗi: " + (serverData?.message || "Không thể lưu sản phẩm"));
     }
   };
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={styles.modalContent} style={{ maxWidth: '800px' }}>
+      <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <div>
             <h2 className={styles.modalTitle}>Thêm mới Sản phẩm</h2>
-            <p className={styles.modalSubtitle}>Vui lòng nhập đầy đủ thông tin sản phẩm</p>
+            <p className={styles.modalSubtitle}>Thông tin chi tiết giúp quản lý kho chính xác hơn</p>
           </div>
           <button onClick={onClose} className={styles.btnCloseHeader}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Hàng 1: Tên & SKU */}
+        <form onSubmit={handleSubmit}>
+          {/* PHẦN 1: Tên & SKU */}
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Tên sản phẩm <span className={styles.required}>*</span></label>
-              <input type="text" required value={formData.Name} onChange={e => setFormData({...formData, Name: e.target.value})} />
+              <input 
+                className={fieldErrors.Name ? styles.inputError : ''}
+                type="text" required value={formData.Name} 
+                onChange={e => setFormData({...formData, Name: e.target.value})} 
+                placeholder="Nhập tên sản phẩm..."
+              />
               {fieldErrors.Name && <span className={styles.errorText}>{fieldErrors.Name}</span>}
             </div>
             <div className={styles.formGroup}>
               <label>Mã SKU <span className={styles.required}>*</span></label>
-              <input type="text" required value={formData.Sku} onChange={e => setFormData({...formData, Sku: e.target.value})} />
+              <input 
+                className={fieldErrors.Sku ? styles.inputError : ''}
+                type="text" required value={formData.Sku} 
+                onChange={e => setFormData({...formData, Sku: e.target.value})} 
+                placeholder="Ví dụ: SP-001"
+              />
               {fieldErrors.Sku && <span className={styles.errorText}>{fieldErrors.Sku}</span>}
             </div>
           </div>
 
-          {/* Hàng 2: Ảnh & Vị trí */}
-          <div className={styles.row}>
-            <div className={styles.formGroup}>
-              <label>Ảnh sản phẩm</label>
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              {previewUrl && <img src={previewUrl} alt="Preview" className={styles.imagePreview} style={{width: '60px', borderRadius: '8px', marginTop: '8px'}} />}
-            </div>
-            <div className={styles.formGroup}>
-              <label>Vị trí kho</label>
-              <input type="text" value={formData.Location} onChange={e => setFormData({...formData, Location: e.target.value})} placeholder="VD: Kệ A1" />
-            </div>
-          </div>
-
-          {/* Hàng 3: Dropdowns */}
+          {/* PHẦN 2: Phân loại */}
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Danh mục *</label>
@@ -148,10 +146,14 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
             <div className={styles.formGroup}>
               <label>Thương hiệu *</label>
               <select required value={formData.BrandId} onChange={e => setFormData({...formData, BrandId: e.target.value})}>
-                <option value="">-- Chọn nhãn hiệu --</option>
+                <option value="">-- Chọn thương hiệu --</option>
                 {brands?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
+          </div>
+
+          {/* PHẦN 3: Kho & Đơn vị */}
+          <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Đơn vị tính *</label>
               <select required value={formData.UnitId} onChange={e => setFormData({...formData, UnitId: e.target.value})}>
@@ -159,21 +161,78 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
                 {units?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
               </select>
             </div>
+            <div className={styles.formGroup}>
+              <label>Vị trí kho</label>
+              <input type="text" value={formData.Location} onChange={e => setFormData({...formData, Location: e.target.value})} placeholder="Kệ A1..." />
+            </div>
+            <div className={styles.formGroup}>
+            <label>Số lượng tồn</label>
+            <input 
+              type="text"
+              placeholder="0"
+              value={formData.StockQuantity === 0 ? "" : formatNumber(formData.StockQuantity)} 
+              
+              onChange={e => {
+                // 1. Lấy giá trị thô và xóa sạch các ký tự không phải số (ngăn chặn dấu -)
+                const rawValue = e.target.value.replace(/\D/g, ""); 
+                
+                const numValue = rawValue === "" ? 0 : Number(rawValue);
+                
+                setFormData({...formData, StockQuantity: numValue});
+              }} 
+            />
+          </div>
           </div>
 
-          {/* Hàng 4: Giá & Tồn kho */}
+          {/* PHẦN 4: Giá cả */}
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Giá nhập *</label>
-              <input type="number" required value={formData.ImportPrice} onChange={e => setFormData({...formData, ImportPrice: Number(e.target.value)})} />
+              <label>Giá nhập (VNĐ) <span className={styles.required}>*</span></label>
+              <input 
+                type="text" 
+                required 
+                value={formatNumber(formData.ImportPrice)} 
+                onChange={e => {
+                  const raw = e.target.value.replace(/\./g, "");
+                  if (/^\d*$/.test(raw)) setFormData({...formData, ImportPrice: parseNumber(e.target.value)});
+                }} 
+              />
             </div>
             <div className={styles.formGroup}>
-              <label>Giá bán *</label>
-              <input type="number" required value={formData.ExportPrice} onChange={e => setFormData({...formData, ExportPrice: Number(e.target.value)})} />
+              <label>Giá bán (VNĐ) <span className={styles.required}>*</span></label>
+              <input 
+                type="text" 
+                required 
+                value={formatNumber(formData.ExportPrice)} 
+                onChange={e => {
+                  const raw = e.target.value.replace(/\./g, "");
+                  if (/^\d*$/.test(raw)) setFormData({...formData, ExportPrice: parseNumber(e.target.value)});
+                }} 
+              />
             </div>
-            <div className={styles.formGroup}>
-              <label>Số lượng tồn</label>
-              <input type="number" value={formData.StockQuantity} onChange={e => setFormData({...formData, StockQuantity: Number(e.target.value)})} />
+          </div>
+
+          {/* PHẦN 5: Hình ảnh (Link URL) */}
+          <div className={styles.formGroup}>
+            <label>Link ảnh sản phẩm (URL)</label>
+            <input 
+              type="text" 
+              placeholder="Dán link ảnh từ Google/Web vào đây..."
+              value={formData.Image}
+              onChange={(e) => setFormData({...formData, Image: e.target.value})}
+              className={styles.urlInput}
+            />
+            
+            <div className={styles.previewContainer} style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px' }}>
+              <img 
+                src={formData.Image?.trim() || '/logo.png'} 
+                alt="Preview" 
+                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }}
+                onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Loi+Link+Anh'; }}
+              />
+              <span style={{ fontSize: '12px', color: '#888' }}>
+                {formData.Image?.trim() ? "Xem trước ảnh từ Link" : "Sẽ dùng logo mặc định nếu để trống"}
+              </span>
             </div>
           </div>
 

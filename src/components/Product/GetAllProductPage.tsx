@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { getProducts } from '../../services/Product/productService';
 import { type Product } from '../../types/Product/product';
 import { type ProductFilter } from '../../types/Product/productFilter';
-import { type ProductResponse } from '../../types/Product/productResponse';
 import AddProductForm from './AddProductform';
 import ProductTable from './ProductTable';
 import ProductSidebar from './ProductSidebar';
@@ -15,31 +14,29 @@ const GetAllProductPage = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Trạng thái phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 10; 
 
-
-const fetchProducts = async () => {
+  const fetchProducts = async () => {
   setLoading(true);
   try {
     const params = { ...filters, page: currentPage, limit: pageSize };
     const res = await getProducts(params); 
+
+    // Kiểm tra xem dữ liệu nằm ở res.items hay res.data.items
+    const dataFromApi = res?.items || res?.data?.items;
+    const totalFromApi = res?.total || res?.data?.total || 0;
     
-    // Vì axiosClient và service đã bóc hết vỏ, res bây giờ chính là PagedProductResponseDto
-    // Nó có cấu trúc: { items: [...], total: 10, page: 1, limit: 10 }
-    
-    if (res && Array.isArray(res.items)) {
-      setProducts(res.items);        // Đổ mảng vào bảng
-      setTotalItems(res.total || 0); // Cập nhật tổng để phân trang
+    if (Array.isArray(dataFromApi)) {
+      setProducts(dataFromApi);
+      setTotalItems(totalFromApi);
     } else {
       setProducts([]);
       setTotalItems(0);
     }
   } catch (error) {
     console.error("Lỗi fetch:", error);
-    setProducts([]);
   } finally {
     setLoading(false);
   }
@@ -49,45 +46,62 @@ const fetchProducts = async () => {
     fetchProducts();
   }, [filters, currentPage]);
 
-  // Khi người dùng thực hiện lọc/tìm kiếm mới, tự động đưa về trang 1
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
+  const handleEdit = (product: any) => {
+    console.log("Mở modal sửa cho:", product);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Bạn có chắc muốn xóa sản phẩm này?")) {
+      console.log("Gọi API xóa ID:", id);
+    }
+  };
+
+  const handleRestore = async (id: number) => {
+    console.log("Gọi API khôi phục ID:", id);
+  };
+
+  
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] gap-6 p-4">
-      {/* Sidebar lọc sản phẩm */}
       <ProductSidebar filters={filters} onFilterChange={setFilters} />
 
       <div className="flex-1 flex flex-col gap-6"> 
-        
-        {/* Thanh tìm kiếm và Nút thêm mới */}
         <div className="flex items-center justify-between gap-6">
           <div className="flex-1">
-            <div className="flex items-center bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-md transition-all duration-300 focus-within:border-[#F23A3A] focus-within:shadow-[0_0_0_5px_rgba(242,58,58,0.1)] group">
-              <span className="text-gray-400 mr-4 text-2xl group-focus-within:text-[#F23A3A] transition-colors">🔍</span>
+            <div className="flex items-center bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-md transition-all duration-300 focus-within:border-[#F23A3A] group">
+              <span className="text-gray-400 mr-4 text-2xl">🔍</span>
               <input 
                 type="text" 
                 placeholder="Tìm theo mã SKU, tên sản phẩm..." 
-                className="bg-transparent border-none outline-none w-full text-base font-semibold text-gray-700 placeholder:text-gray-400 tracking-wide"
+                className="bg-transparent border-none outline-none w-full text-base font-semibold text-gray-700"
                 value={filters.searchTerm || ''}
-                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFilters({ ...filters, searchTerm: val === "" ? undefined : val });
+                }}
               />
             </div>
           </div>
 
-          {/* Nút bấm mở Modal thêm sản phẩm */}
           <Button 
             text="Thêm sản phẩm mới" 
             onClick={() => setIsModalOpen(true)} 
           />
         </div>
         
-        {/* Khu vực Bảng dữ liệu & Phân trang */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <ProductTable data={products} loading={loading} />
+          <ProductTable 
+            data={products} 
+            loading={loading} 
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onRestore={handleRestore}
+          />
           
-          {/* Chỉ hiện phân trang khi có dữ liệu */}
           {products.length > 0 && (
             <div className="p-4 border-t border-gray-100 flex justify-end bg-white">
               <Pagination 
@@ -101,7 +115,6 @@ const fetchProducts = async () => {
         </div>
       </div>
 
-      {/* Form thêm sản phẩm mới (Modal) */}
       <AddProductForm 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
