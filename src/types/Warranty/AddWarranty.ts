@@ -1,5 +1,7 @@
 export interface WarrantyDetailDTO {
   serialNumberId: number;
+  serialCode?: string;
+  productName?: string;
   issueDescription?: string;
   sentToVendorDate?: string | null;
   receivedFromVendorDate?: string | null;

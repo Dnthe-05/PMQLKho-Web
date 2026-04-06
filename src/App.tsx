@@ -34,7 +34,6 @@ const App = () => {
             <GetAllProductPage />
           </MainLayout>
         } />
-        {/* Bạn có thể thêm các trang Khách hàng, Hàng hóa... tương tự ở đây */}
         <Route path="/bao-hanh" element={
           <MainLayout currentPage="Bảo Hành">
             <WarrantyPage/>
