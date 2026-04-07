@@ -9,21 +9,23 @@ interface ProductSidebarProps {
 }
 
 const ProductSidebar: React.FC<ProductSidebarProps> = ({ filters, onFilterChange }) => {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
-  const [units, setUnits] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
 
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [catData, brandData, unitData] = await Promise.all([
+        const [catData, brandData, unitData]: any = await Promise.all([
           getCategories(),
           getBrands(),
           getUnits()
         ]);
-        setCategories(catData || []);
-        setBrands(brandData || []);
-        setUnits(unitData || []);
+        
+        // Bóc tách data từ ApiResponse của con
+        setCategories(catData.data || catData || []);
+        setBrands(brandData.data || brandData || []);
+        setUnits(unitData.data || unitData || []);
       } catch (error) {
         console.error("Lỗi lấy dữ liệu gợi ý:", error);
       }
@@ -31,89 +33,107 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({ filters, onFilterChange
     loadOptions();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Hàm xử lý chung cho cả select và checkbox
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    
+    let finalValue: any;
+
+    if (type === 'checkbox') {
+      finalValue = (e.target as HTMLInputElement).checked;
+    } else {
+      // Ép kiểu về Number vì Backend cần int cho các trường ID
+      finalValue = value === "" ? undefined : Number(value);
+    }
+
     onFilterChange({
       ...filters,
-      [name]: val === "" ? undefined : val
+      [name]: finalValue
     });
   };
 
   return (
     <aside className={styles.sidebarContainer}>
       <div className={styles.stickyWrapper}>
-        <h2 className={styles.title}>
-          <span style={{ marginRight: '8px' }}></span> Bộ lọc thông minh
-        </h2>
+        <h2 className={styles.title}>Bộ lọc thông minh</h2>
 
-        {/* 2. Danh mục */}
+        {/* Danh mục */}
         <div className={styles.filterGroup}>
           <label className={styles.label}>Danh mục</label>
-          <input
-            list="cat-list"
-            name="categoryName"
-            placeholder="Chọn/Gõ danh mục..."
+          <select
+            name="categoryId"
             className={styles.inputField}
-            value={filters.categoryName || ''}
+            value={filters.categoryId || ''}
             onChange={handleChange}
-          />
-          <datalist id="cat-list">
-            {categories.map((c, i) => <option key={i} value={c} />)}
-          </datalist>
+          >
+            <option value="">-- Tất cả danh mục --</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
-        {/* 3. Nhãn hàng */}
+        {/* Nhãn hàng */}
         <div className={styles.filterGroup}>
           <label className={styles.label}>Nhãn hàng</label>
-          <input
-            list="brand-list"
-            name="brandName"
-            placeholder="Chọn/Gõ nhãn hàng..."
+          <select
+            name="brandId"
             className={styles.inputField}
-            value={filters.brandName || ''}
+            value={filters.brandId || ''}
             onChange={handleChange}
-          />
-          <datalist id="brand-list">
-            {brands.map((b, i) => <option key={i} value={b} />)}
-          </datalist>
+          >
+            <option value="">-- Tất cả nhãn hàng --</option>
+            {brands.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
         </div>
 
-        {/* 4. Đơn vị tính */}
+        {/* Đơn vị tính */}
         <div className={styles.filterGroup}>
           <label className={styles.label}>Đơn vị tính</label>
-          <input
-            list="unit-list"
-            name="unitName"
-            placeholder="Chọn/Gõ đơn vị..."
+          <select
+            name="unitId"
             className={styles.inputField}
-            value={filters.unitName || ''}
+            value={filters.unitId || ''}
             onChange={handleChange}
-          />
-          <datalist id="unit-list">
-            {units.map((u, i) => <option key={i} value={u} />)}
-          </datalist>
+          >
+            <option value="">-- Tất cả đơn vị --</option>
+            {units.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
         </div>
 
-        {/* 5. Trạng thái */}
-        <label className={styles.checkboxContainer}>
-          <input
-            type="checkbox"
-            name="isDeleted"
-            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-            checked={filters.isDeleted || false}
-            onChange={handleChange}
-          />
-          <span style={{ marginLeft: '12px', fontSize: '14px', color: '#374151', fontWeight: 500 }}>
-            Xem hàng đã xóa
-          </span>
-        </label>
 
-        {/* Nút Reset */}
-        <button
-          onClick={() => onFilterChange({})}
-          className={styles.btnReset}
+      <div className={styles.filterGroup}>
+        <label className={styles.label}>Trạng thái</label>
+        <select
+          name="isDeleted"
+          className={styles.inputField}
+          // Chuyển đổi từ boolean sang string để select hiển thị được
+          value={filters.isDeleted === true ? "true" : filters.isDeleted === false ? "false" : ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            let finalValue: boolean | undefined;
+            
+            if (val === "true") finalValue = true;
+            else if (val === "false") finalValue = false;
+            else finalValue = undefined; // Trường hợp "Tất cả"
+
+            onFilterChange({
+              ...filters,
+              isDeleted: finalValue
+            });
+          }}
         >
+          <option value="">--- Tất cả ---</option>
+          <option value="false">Đang kinh doanh</option>
+          <option value="true">Đã xóa (Thùng rác)</option>
+        </select>
+      </div>
+
+        <button onClick={() => onFilterChange({})} className={styles.btnReset}>
           🔄 LÀM MỚI BỘ LỌC
         </button>
       </div>

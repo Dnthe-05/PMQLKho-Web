@@ -1,7 +1,7 @@
 import axiosClient from '../../API/axiosClient';
-import { type Product } from '../../types/Product/product';
-import { type ProductFilter } from '../../types/Product/productFilter';
-import { type ProductResponse } from '../../types/Product/productResponse';
+// import { type Product } from '../../types/Product/product';
+// import { type ProductFilter } from '../../types/Product/productFilter';
+// import { type ProductResponse } from '../../types/Product/productResponse';
 
 export const getProducts = async (filters: any): Promise<any> => {
     const response = await axiosClient.get("/api/product", { params: filters });
@@ -33,4 +33,8 @@ export const getUnits = async (): Promise<string[]> => {
 
 export const deleteProduct = async (id: number) => {
     return await axiosClient.patch(`/api/product/${id}`);
+};
+
+export const getProductBySerial = async (serialCode: string) => {
+  return await axiosClient.get(`/api/WarrantyCard/get-product-name/${serialCode}`);
 };
