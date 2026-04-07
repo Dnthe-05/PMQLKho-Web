@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../../css/SharedLayout.module.css';
 import { getWarrantyById } from '../../services/Warranty/warrantyService';
+import EditWarrantyForm from '../../components/Warranty/EditWarrantyForm';
 
 export default function WarrantyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -9,9 +10,9 @@ export default function WarrantyDetailPage() {
   
   const [warranty, setWarranty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchDetail = async () => {
+  const fetchDetail = async () => {
       try {
         const response = await getWarrantyById(Number(id));
         setWarranty(response.data?.data || response.data);
@@ -22,7 +23,7 @@ export default function WarrantyDetailPage() {
         setLoading(false);
       }
     };
-
+  useEffect(() => {
     if (id) fetchDetail();
   }, [id]);
 
@@ -51,10 +52,17 @@ export default function WarrantyDetailPage() {
           &#8592; Quay lại
         </button>
         <h2 className={styles.pageTitle} style={{ margin: 0 }}>
-          Chi tiết phiếu bảo hành: <span style={{ color: '#e31e24' }}>{warranty.code || `BH00${warranty.id}`}</span>
+          Chi tiết phiếu bảo hành: <span style={{ color: '#e31e24' }}>{warranty.code}</span>
         </h2>
-        <div style={{ marginLeft: 'auto' }}>
-          {renderStatus(warranty.status)}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button 
+              onClick={() => setIsEditModalOpen(true)}
+              style={{ padding: '6px 15px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+            Chỉnh sửa
+            </button>
+            
+            {renderStatus(warranty.status)}
         </div>
       </div>
 
@@ -97,8 +105,8 @@ export default function WarrantyDetailPage() {
                   <td className={styles.td}><strong>{item.serialCode || 'N/A'}</strong></td>
                   <td className={styles.td}><strong>{item.productName || 'Chưa xác định'}</strong></td>
                   <td className={styles.td}>{item.issueDescription || '---'}</td>
-                  <td className={styles.td}>{formatDate(item.warrantySentDate)}</td>
-                  <td className={styles.td}>{formatDate(item.returnFromVendorDate)}</td>
+                  <td className={styles.td}>{formatDate(item.sentToVendorDate)}</td>
+                  <td className={styles.td}>{formatDate(item.receivedFromVendorDate)}</td>
                   <td className={styles.td} style={{ color: '#e31e24', fontWeight: 'bold' }}>
                     {item.warrantyCost ? item.warrantyCost.toLocaleString('vi-VN') : '0'} ₫
                   </td>
@@ -110,7 +118,12 @@ export default function WarrantyDetailPage() {
           </tbody>
         </table>
       </div>
-
+      <EditWarrantyForm 
+        isOpen={isEditModalOpen}
+        warrantyId={Number(id)}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {fetchDetail();}}
+      />
     </div>
   );
 }
