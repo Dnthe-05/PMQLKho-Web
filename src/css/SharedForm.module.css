@@ -139,3 +139,43 @@
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
+
+/* --- CÁC CLASS BỔ SUNG CHO FORM NHÂN VIÊN --- */
+
+.modalEmployee {
+  max-width: 600px;
+}
+
+.formGroupFull {
+  width: 100%;
+}
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #8c8c8c;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.eyeButton:hover {
+  color: #262626;
+}
