@@ -26,6 +26,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <NavLink to="/bao-hanh" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Bảo hành</NavLink>
           <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhà cung cấp</NavLink>
           <NavLink to="/khach-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Khách hàng</NavLink>
+          <NavLink to="/nhan-vien" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhân viên</NavLink>
         </div>
       </nav>
 
