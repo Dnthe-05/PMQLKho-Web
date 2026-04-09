@@ -1,32 +1,39 @@
 import React from 'react';
 import { type Employee } from '../../types/Employee/Employee';
-// Giả sử bạn tái sử dụng CSS module của Product hoặc tạo mới một file tương tự cho Employee
+
 import styles from '../../css/Product/ProductTable.module.css'; 
 
 interface EmployeeTableProps {
   data: Employee[];
   loading: boolean;
+  onEdit: (employee: Employee) => void;
+  onDelete: (id: number) => void;
+  currentPage: number; 
+  pageSize: number;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading }) => {
+const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
   const safeData = data || [];
 
-  // Hàm phụ trợ để hiển thị Vai trò (Role) từ số sang chữ
+
   const getRoleName = (role?: number) => {
     switch (role) {
       case 1: return "Quản trị viên";
       case 2: return "Nhân viên kho";
-      case 3: return "Nhân viên bán hàng";
+      
       default: return "Chưa xác định";
     }
   };
+
+  if (loading) return <div className="text-center p-5">Đang tải dữ liệu...</div>;
 
   return (
     <div className={styles.tableContainer}>
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
-            <th className={styles.th} style={{ width: '80px', textAlign: 'center' }}>ID</th>
+            {/* Đổi tiêu đề ID thành STT */}
+            <th className={styles.th} style={{ width: '60px', textAlign: 'center' }}>STT</th>
             <th className={styles.th}>Tài khoản (Username)</th>
             <th className={styles.th}>Họ và tên</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Vai trò</th>
@@ -35,59 +42,84 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading }) => {
           </tr>
         </thead>
         <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</td>
-            </tr>
-          ) : safeData.length === 0 ? (
+          {safeData.length === 0 ? (
             <tr>
               <td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>Không có dữ liệu nhân viên</td>
             </tr>
           ) : (
-            safeData.map((item: Employee) => (
-              <tr key={item.id} className={styles.tr}>
-                {/* ID */}
-                <td className={styles.td} style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                  {item.id}
-                </td>
+            safeData.map((item: Employee, index: number) => {
+              const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
 
-                {/* Tài khoản */}
-                <td className={styles.td}>
-                  <div style={{ fontWeight: 600, color: '#262626' }}>{item.username}</div>
-                </td>
+              return (
+                <tr 
+                  key={item.id} 
+                  className={`${styles.tr} ${isDeleted ? styles.rowDeleted : ''}`}
+                >
+                  {/* Hiển thị Số thứ tự thay vì item.id */}
+                  <td className={styles.td} style={{ textAlign: 'center', fontWeight: 'bold', color: isDeleted ? '#bfbfbf' : 'inherit' }}>
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </td>
 
-                {/* Họ và tên */}
-                <td className={styles.td}>
-                  <div style={{ color: '#595959' }}>{item.fullName}</div>
-                </td>
+                  {/* Tài khoản */}
+                  <td className={styles.td}>
+                    <div style={{ 
+                      fontWeight: 600, 
+                      color: isDeleted ? '#bfbfbf' : '#262626',
+                      textDecoration: isDeleted ? 'line-through' : 'none' 
+                    }}>
+                      {item.username}
+                      {isDeleted && <span className={styles.deleteBadge}>Đã nghỉ</span>}
+                    </div>
+                  </td>
 
-                {/* Vai trò */}
-                <td className={styles.td} style={{ textAlign: 'center' }}>
-                  <span className={styles.stockBadge} style={{ background: '#F6FFED', color: '#389E0D', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
-                    {getRoleName(item.role)}
-                  </span>
-                </td>
+                  {/* Họ và tên */}
+                  <td className={styles.td}>
+                    <div style={{ color: isDeleted ? '#bfbfbf' : '#595959' }}>{item.fullName}</div>
+                  </td>
 
-                {/* Trạng thái (dựa vào DeletedAt) */}
-                <td className={styles.td} style={{ textAlign: 'center' }}>
-                  {item.deletedAt ? (
-                    <span style={{ color: '#f5222d', fontSize: '13px' }}>Đã nghỉ việc</span>
-                  ) : (
-                    <span style={{ color: '#1890ff', fontSize: '13px' }}>Đang làm việc</span>
-                  )}
-                </td>
+                  {/* Vai trò */}
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
+                    <span 
+                      className={styles.stockBadge} 
+                      style={isDeleted ? { background: '#f5f5f5', color: '#bfbfbf' } : { background: '#F6FFED', color: '#389E0D' }}
+                    >
+                      {getRoleName(item.role)}
+                    </span>
+                  </td>
 
-                {/* Hoạt động */}
-                <td className={styles.td} style={{ textAlign: 'center' }}>
-                  <div className="flex justify-center gap-2">
-                    <button className={styles.actionBtn}>Sửa</button>
-                    {!item.deletedAt && (
-                      <button className={styles.actionBtn} style={{ color: '#ff4d4f' }}>Xóa</button>
+                  {/* Trạng thái */}
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
+                    {isDeleted ? (
+                      <span style={{ color: '#bfbfbf', fontSize: '13px' }}>Đã nghỉ việc</span>
+                    ) : (
+                      <span style={{ color: '#1890ff', fontSize: '13px' }}>Đang làm việc</span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            ))
+                  </td>
+
+                  {/* Hoạt động */}
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        className={styles.actionBtn} 
+                        onClick={() => onEdit(item)}
+                      >
+                        Sửa
+                      </button>
+
+                      {!isDeleted && (
+                        <button 
+                          className={styles.actionBtn} 
+                          style={{ color: '#ff4d4f' }} 
+                          onClick={() => onDelete(item.id)}
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
