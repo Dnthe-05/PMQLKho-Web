@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/SharedForm.module.css';
-import { getWarrantyById, updateWarranty,getProductBySerial } from '../../services/Warranty/warrantyService';
+import { getWarrantyById, updateWarranty, getProductBySerial } from '../../services/Warranty/warrantyService';
+import { useWarrantyValidation } from '../../hooks/useWarrantyValidation'; 
+import WarrantyItemTable from './WarrantyItemTable';
 
 interface EditWarrantyItem {
   id?: number;
@@ -28,14 +30,16 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
   const [status, setStatus] = useState(1);
   
   const [items, setItems] = useState<EditWarrantyItem[]>([]);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { validateDuplicate } = useWarrantyValidation();
+
   useEffect(() => {
     if (isOpen && warrantyId) {
       loadWarrantyData(warrantyId);
+      setBackendError(null);
     }
   }, [isOpen, warrantyId]);
 
@@ -72,28 +76,40 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
     e.preventDefault();
     setBackendError(null);
 
-    const serials = items.map(i => i.serialNumberId.trim());
-    if (serials.some((s, idx) => serials.indexOf(s) !== idx)) {
-      setErrors({ serialList: "Mã Serial không được trùng nhau!" });
+    const validItems = items.filter(item => 
+      item.serialNumberId.trim() !== '' && 
+      item.productName.trim() !== '' && 
+      item.productName !== 'Không tìm thấy'
+    );
+
+    if (validItems.length === 0) {
+      alert("Lỗi: Cần ít nhất 1 sản phẩm có mã Serial hợp lệ trong danh sách!");
       return;
     }
 
-    // kiểm tra ngày
-    for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    
-    if (item.sentToVendorDate && item.receivedFromVendorDate) {
-      const sentDate = new Date(item.sentToVendorDate);
-      const receivedDate = new Date(item.receivedFromVendorDate);
-
-      if (receivedDate < sentDate) {
-        const errorMsg = `Ngày gửi không thể lớn hơn ngày nhận từ hãng`;
-        setErrors(prev => ({ ...prev, [`dateError_${i}`]: errorMsg }));
-        alert(errorMsg);
+    if (status === 3 || status === 4) {
+      const isMissingDate = validItems.some(item => !item.receivedFromVendorDate);
+      if (isMissingDate) {
+        alert(`Lỗi: Khi chuyển sang trạng thái ${status === 3 ? "Hoàn thành" : "Hủy"}, tất cả thiết bị phải có 'Ngày về từ hãng'!`);
         return;
       }
     }
-  }
+
+    const serials = items.map(i => i.serialNumberId.trim().toUpperCase());
+    if (serials.some((s, idx) => serials.indexOf(s) !== idx)) {
+      alert("Lỗi: Có mã Serial bị trùng lặp trong danh sách!");
+      return;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.sentToVendorDate && item.receivedFromVendorDate) {
+        if (new Date(item.receivedFromVendorDate) < new Date(item.sentToVendorDate)) {
+          alert(`Lỗi tại thiết bị ${i + 1}: Ngày nhận từ hãng không được nhỏ hơn ngày gửi đi!`);
+          return;
+        }
+      }
+    }
 
     if (!window.confirm("Xác nhận cập nhật thay đổi?")) return;
 
@@ -121,7 +137,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
       onSuccess();
       onClose();
     } catch (error: any) {
-      setBackendError(error.response?.data?.message || "Lỗi cập nhật dữ liệu.");
+      setBackendError(error.response?.data?.message || "Lỗi cập nhật dữ liệu từ máy chủ.");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,17 +146,31 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
   const handleKeyDown = async (e: React.KeyboardEvent, index: number) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const serialId = items[index].serialNumberId;
+      const serialId = items[index].serialNumberId.trim();
       if (!serialId) return;
+
+      if (!validateDuplicate(items, index, serialId, 'serialNumberId')) {
+        const newItems = [...items];
+        newItems[index].serialNumberId = '';
+        setItems(newItems);
+        return;
+      }
+
       try {
         const response = await getProductBySerial(serialId);
-        if (response.data) {
+        const d = response.data?.data || response.data;
+        if (d) {
           const newItems = [...items];
-          newItems[index].productName = response.data.data?.name || response.data.name;
+          newItems[index].productName = d.name || d.productName;
           setItems(newItems);
           document.getElementById(`issue-edit-${index}`)?.focus();
         }
-      } catch (err) { alert("Không tìm thấy Serial!"); }
+      } catch (err) { 
+        alert("Không tìm thấy Serial!"); 
+        const newItems = [...items];
+        newItems[index].productName = 'Không tìm thấy';
+        setItems(newItems);
+      }
     }
   };
 
@@ -180,7 +210,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
                   <option value={1}>Tiếp nhận</option>
                   <option value={2}>Đang sửa chữa</option>
                   <option value={3}>Hoàn thành</option>
-                  <option value={4}>Đã trả khách</option>
+                  <option value={4}>Hủy</option>
                 </select>
               </div>
             </div>
@@ -205,52 +235,37 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
               <button type="button" onClick={addItem} className={styles.btnSubmit} style={{ padding: '4px 8px', background: '#28a745', fontSize: '12px' }}>+ Thêm dòng</button>
             </div>
 
-            <div style={{ maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
-              {items.map((item, index) => (
-                <div key={index} style={{ background: '#f9f9f9', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #eee' }}>
-                  <div className={styles.row} style={{ gap: '10px', marginBottom: '10px' }}>
-                    <div className={styles.formGroup} style={{ flex: 1 }}>
-                      <label style={{ fontSize: '11px' }}>Serial (Bắn máy)</label>
-                      <input type="text" value={item.serialNumberId} onKeyDown={(e) => handleKeyDown(e, index)} onChange={(e) => handleItemChange(index, 'serialNumberId', e.target.value)} />
-                    </div>
-                    <div className={styles.formGroup} style={{ flex: 1.5 }}>
-                      <label style={{ fontSize: '11px' }}>Tên sản phẩm</label>
-                      <input type="text" value={item.productName} readOnly style={{ background: '#eee' }} />
-                    </div>
-                    <div className={styles.formGroup} style={{ flex: 1 }}>
-                      <label style={{ fontSize: '11px' }}>Chi phí (VNĐ)</label>
-                      <input type="number" value={item.warrantyCost} onChange={(e) => handleItemChange(index, 'warrantyCost', e.target.value)} />
-                    </div>
-                  </div>
-
-                  <div className={styles.row} style={{ gap: '10px' }}>
-                    <div className={styles.formGroup} style={{ flex: 2 }}>
-                      <label style={{ fontSize: '11px' }}>Nội dung lỗi</label>
-                      <input id={`issue-edit-${index}`} type="text" value={item.issueDescription} onChange={(e) => handleItemChange(index, 'issueDescription', e.target.value)} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label style={{ fontSize: '11px' }}>Ngày gửi hãng</label>
-                      <input type="date" value={item.sentToVendorDate} onChange={(e) => handleItemChange(index, 'sentToVendorDate', e.target.value)} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label style={{ fontSize: '11px' }}>Ngày về từ hãng</label>
-                      <input type="date" value={item.receivedFromVendorDate} onChange={(e) => handleItemChange(index, 'receivedFromVendorDate', e.target.value)} />
-                    </div>
-                    <button type="button" onClick={() => removeItem(index)} disabled={items.length === 1} style={{ alignSelf: 'flex-end', marginBottom: '8px', color: '#dc3545', background: 'none', border: 'none', fontSize: '20px' }}>&times;</button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WarrantyItemTable 
+              items={items}
+              handleItemChange={handleItemChange}
+              handleKeyDown={handleKeyDown}
+              removeItem={removeItem}
+            />
 
             <div style={{ textAlign: 'right', padding: '15px', fontWeight: 'bold', fontSize: '16px', color: '#e31e24' }}>
               TỔNG CHI PHÍ: {items.reduce((sum, i) => sum + (Number(i.warrantyCost) || 0), 0).toLocaleString()} VNĐ
             </div>
 
-            {backendError && <div className={styles.errorText} style={{ textAlign: 'center', background: '#fff1f0', padding: '10px', marginBottom: '10px' }}>{backendError}</div>}
+            {backendError && (
+              <div style={{ 
+                backgroundColor: '#fff1f0', 
+                border: '1px solid #ffa39e', 
+                color: '#e31e24', 
+                padding: '10px', 
+                borderRadius: '4px', 
+                marginBottom: '15px',
+                textAlign: 'center',
+                fontSize: '14px'
+              }}>
+                {backendError}
+              </div>
+            )}
 
             <div className={styles.formActions}>
               <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isSubmitting}>Hủy bỏ</button>
-              <button type="submit" className={styles.btnSubmit} disabled={isSubmitting}>Xác nhận Cập nhật</button>
+              <button type="submit" className={styles.btnSubmit} disabled={isSubmitting}>
+                {isSubmitting ? 'Đang cập nhật...' : 'Xác nhận Cập nhật'}
+              </button>
             </div>
           </form>
         )}
