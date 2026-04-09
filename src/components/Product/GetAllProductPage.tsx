@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProducts, deleteProduct } from '../../services/Product/productService'; // Nhớ import deleteProduct
+import { getProducts, deleteProduct } from '../../services/Product/productService'; 
 import { type Product } from '../../types/Product/product';
 import { type ProductFilter } from '../../types/Product/productFilter';
 import AddProductForm from './AddProductform';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/SharedForm.module.css';
-import { getWarrantyById, updateWarranty } from '../../services/Warranty/warrantyService';
-import { getProductBySerial } from '../../services/Product/productService';
+import { getWarrantyById, updateWarranty,getProductBySerial } from '../../services/Warranty/warrantyService';
 
 interface EditWarrantyItem {
   id?: number;

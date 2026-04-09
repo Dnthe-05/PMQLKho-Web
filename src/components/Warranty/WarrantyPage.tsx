@@ -8,14 +8,11 @@ import AddWarrantyForm from './AddWarrantyFrom';
 export default function WarrantyPage() {
   const { 
     warranties, loading, query, setQuery, status, setStatus, 
-    currentPage, setCurrentPage, pageSize, refresh 
+    currentPage, setCurrentPage, refresh ,totalItems,pageSize
   } = useWarranties();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const indexOfLastItem = currentPage * pageSize;
-  const indexOfFirstItem = indexOfLastItem - pageSize;
-  const safeWarranties = Array.isArray(warranties) ? warranties : [];
-  const currentData = safeWarranties.slice(indexOfFirstItem, indexOfLastItem);
+  const currentData = Array.isArray(warranties) ? warranties : [];
 
   return (
     <>
@@ -65,9 +62,9 @@ export default function WarrantyPage() {
           <WarrantyTable data={currentData}/>
           <Pagination 
             currentPage={currentPage}
-            totalItems={safeWarranties.length}
+            totalItems={totalItems}
             pageSize={pageSize}
-            onPageChange={(p) => setCurrentPage(p)}
+            onPageChange={(page) => setCurrentPage(page)}
           />
         </>
         

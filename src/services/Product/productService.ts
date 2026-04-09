@@ -30,6 +30,7 @@ export const getUnits = async (): Promise<string[]> => {
 };
 
 export const deleteProduct = async (id: number) => {
+
     return await axiosClient.delete(`/api/product/${id}`);
 };
 
@@ -39,4 +40,5 @@ export const updateProduct = async (id: number, data: any) => {
 
 export const getProductBySerial = async (serialCode: string) => {
   return await axiosClient.get(`/api/WarrantyCard/get-product-name/${serialCode}`);
-};
+
+}
