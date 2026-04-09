@@ -1,7 +1,6 @@
 import React, { useState,useEffect } from 'react';
 import styles from '../../css/SharedForm.module.css'; 
-import { createWarranty } from '../../services/Warranty/warrantyService';
-import { getProductBySerial } from '../../services/Product/productService'; 
+import { createWarranty,getProductBySerial } from '../../services/Warranty/warrantyService';
 import { type CreateWarrantyDTO } from '../../types/Warranty/AddWarranty';
 
 interface WarrantyItem {

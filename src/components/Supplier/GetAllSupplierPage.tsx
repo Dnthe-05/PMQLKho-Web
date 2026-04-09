@@ -9,17 +9,14 @@ import { deleteSupplier } from '../../services/Supplier/supplierService';
 import ConfirmModal from '../ConfirmModal';
 import Pagination from '../Pagination';
 export default function SupplierPage() {
-  const { suppliers, loading, query, setQuery,status,setStatus,currentPage, setCurrentPage, pageSize,refresh} = useSuppliers();
+  const { suppliers, loading, query, setQuery,status,setStatus,currentPage, setCurrentPage, pageSize,refresh,totalItems} = useSuppliers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [targetSupplier, setTargetSupplier] = useState<Supplier | null>(null);
-  //dữ liệu
-  const indexOfLastItem = currentPage * pageSize;
-  const indexOfFirstItem = indexOfLastItem - pageSize;
-  const safesupplier = Array.isArray(suppliers) ? suppliers : [];
-  const currentItems = suppliers.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = Array.isArray(suppliers) ? suppliers : [];
+
   const handleEdit = (supplier: Supplier) => {
   setSelectedSupplier(supplier);
   setIsEditOpen(true);
@@ -33,7 +30,7 @@ export default function SupplierPage() {
     if (!targetSupplier) return;
     try {
       await deleteSupplier(targetSupplier.idNcc);
-      alert(targetSupplier.isActive ? "Xóa thành công!" : "Khôi phục thành công!");
+      alert("Xóa thành công!");
       refresh();
     } catch (error) {
       alert("Có lỗi xảy ra khi thực hiện thao tác này.");
@@ -78,7 +75,17 @@ export default function SupplierPage() {
           ĐANG TẢI DỮ LIỆU...
         </div>
       ) : (
-        <SupplierTable data={currentItems} onEdit={handleEdit} onDelete={handleDeleteClick}/>
+        <>
+          <SupplierTable data={currentItems} onEdit={handleEdit} onDelete={handleDeleteClick}/>
+          <div className={styles.paginationFooter}>
+          <Pagination 
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={(p) => setCurrentPage(p)}
+            />
+          </div>
+        </>
       )}
       <EditSupplierForm isOpen={isEditOpen} 
         onClose={() => {
@@ -89,25 +96,14 @@ export default function SupplierPage() {
         supplier={selectedSupplier} 
       />
     </div>
-    <div className={styles.paginationFooter}>
-        <Pagination 
-          currentPage={currentPage}
-          totalItems={safesupplier.length}
-          pageSize={pageSize}
-          onPageChange={(p) => setCurrentPage(p)}
-        />
-      </div>
     <ConfirmModal 
         isOpen={isDeleteModalOpen}
-        title={targetSupplier?.isActive ? "Xác nhận xóa" : "Xác nhận khôi phục"}
-        message={
-          targetSupplier?.isActive 
-          ? `Bạn có chắc chắn muốn xóa nhà cung cấp ${targetSupplier?.nameNcc}?`
-          : `Bạn có chắc chắn muốn khôi phục nhà cung cấp ${targetSupplier?.nameNcc}?`
-        }
+        title={"Xác nhận xóa"}
+        message={`Bạn có chắc chắn muốn xóa nhà cung cấp ${targetSupplier?.nameNcc}?`}
         onConfirm={handleConfirmDelete}
         onCancel={() => setIsDeleteModalOpen(false)}
       />
   </>
   );
+  
 }

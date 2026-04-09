@@ -7,34 +7,44 @@ export const useSuppliers = () => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');  
   const [status, setStatus] = useState<boolean>(true); 
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
 
-const loadData = async (searchText: string, statusValue: boolean) => {
-  try {
-    setLoading(true);
-    const res = await getSuppliers(searchText, statusValue);
-    
-    if (Array.isArray(res)) {
-      setSuppliers(res);
-    } else if (res && (res as any).data) { 
-      setSuppliers((res as any).data);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const res = await getSuppliers(query, status, currentPage);
+      
+      if (res && res.data) {
+        const pagedData = res.data;
+        setSuppliers(pagedData.items || []);
+        setTotalItems(pagedData.totalCount || 0);
+        setPageSize(pagedData.pageSize || 10);
+      } else {
+        setSuppliers([]);
+        setTotalItems(0);
+      }
+    } catch (error) {
+      console.error("Lỗi tải dữ liệu nhà cung cấp:", error);
+      setSuppliers([]);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (error) {
-    console.error("Lỗi tải dữ liệu:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, status]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadData(query, status);
+      loadData();
     }, 400);
-    setCurrentPage(1);
     return () => clearTimeout(timer);
-  }, [query, status]);
+  }, [query, status, currentPage]);
 
   return {
     suppliers,
@@ -43,8 +53,10 @@ const loadData = async (searchText: string, statusValue: boolean) => {
     setQuery,
     status,     
     setStatus,  
-    currentPage, setCurrentPage,
+    currentPage, 
+    setCurrentPage,
     pageSize,
-    refresh: () => loadData(query, status) 
+    totalItems,
+    refresh: loadData 
   };
 };

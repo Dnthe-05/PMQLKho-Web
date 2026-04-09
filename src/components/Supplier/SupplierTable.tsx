@@ -63,7 +63,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ data,onEdit,onDelete }) =
 
                       <button 
                       className={`${styles.btnAction} ${item.isActive ? styles.btnDelete : styles.btnRestore}`} 
-                      title={item.isActive ? "Xóa tạm thời" : "Khôi phục"}
+                      title={"Xóa tạm thời"}
                       onClick={() => onDelete(item)}
                     >
                       {item.isActive ? (
