@@ -5,4 +5,5 @@ export interface Employee {
     role?: number;
     createdAt?: string;
     deletedAt?: string;
+    
 }
