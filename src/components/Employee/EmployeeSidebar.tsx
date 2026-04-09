@@ -9,8 +9,7 @@ interface EmployeeSidebarProps {
 
 const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ filters, onFilterChange }) => {
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    // Đã xóa biến type ở đây cho hết báo vàng
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     let finalValue: any = value;
 
@@ -47,31 +46,41 @@ const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ filters, onFilterChan
             <option value="">-- Tất cả vai trò --</option>
             <option value={1}>Quản trị viên</option>
             <option value={2}>Nhân viên kho</option>
-            <option value={3}>Nhân viên bán hàng</option>
+          
           </select>
         </div>
 
-        {/* 2. Lọc nhân viên đã xóa (Logic đảo ngược cho khớp C#) */}
-        <label className={styles.checkboxContainer} style={{ marginTop: '20px' }}>
-          <input
-            type="checkbox"
-            // Nếu isActive là false (đã nghỉ) -> check ô này
-            checked={filters.isActive === false} 
-            onChange={(e) => onFilterChange({ 
-              ...filters, 
-              // Nếu người dùng tick ô -> gửi isActive = false. Nếu bỏ tick -> gửi isActive = true
-              isActive: !e.target.checked 
-            })}
-            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-          />
-          <span style={{ marginLeft: '12px', fontSize: '14px', color: '#374151', fontWeight: 500 }}>
-            Xem nhân viên đã nghỉ việc/xóa
-          </span>
-        </label>
+        {/* 2. Trạng thái hoạt động (Dropdown thay vì Checkbox) */}
+        <div className={styles.filterGroup} style={{ marginTop: '16px' }}>
+          <label className={styles.label}>Trạng thái</label>
+          <select
+            name="isActive"
+            className={styles.inputField}
+            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d9d9d9' }}
+            value={filters.isActive === true ? "true" : filters.isActive === false ? "false" : ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              let finalValue: boolean | undefined;
+              
+              if (val === "true") finalValue = true;
+              else if (val === "false") finalValue = false;
+              else finalValue = undefined;
+
+              onFilterChange({
+                ...filters,
+                isActive: finalValue
+              });
+            }}
+          >
+            <option value="">--- Tất cả ---</option>
+            <option value="true">Đang làm việc</option>
+            <option value="false">Đã nghỉ việc / Đã xóa</option>
+          </select>
+        </div>
 
         {/* Nút Reset */}
         <button
-          onClick={() => onFilterChange({ isActive: true })} // Mặc định reset về người đang làm (isActive = true)
+          onClick={() => onFilterChange({})} 
           className={styles.btnReset}
           style={{ marginTop: '30px' }}
         >
