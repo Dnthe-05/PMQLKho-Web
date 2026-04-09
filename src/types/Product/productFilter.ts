@@ -1,10 +1,9 @@
 export interface ProductFilter {
-    categoryName?: string;
-    brandName?: string;
-    unitName?: string;
+    categoryId?: number; 
+    brandId?: number;    
+    unitId?: number;     
     isDeleted?: boolean; 
     searchTerm?: string;
-
     page?: number;
     limit?: number;
 }

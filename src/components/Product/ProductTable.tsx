@@ -8,6 +8,7 @@ interface ProductTableProps {
   onEdit: (product: any) => void;
   onDelete: (id: number) => void;
   onRestore: (id: number) => void;
+  isDeleted?: boolean; 
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({ data, loading, onEdit, onDelete, onRestore }) => {
@@ -31,46 +32,45 @@ const ProductTable: React.FC<ProductTableProps> = ({ data, loading, onEdit, onDe
         </thead>
         <tbody>
           {safeData.map((item: any) => {
-            // Check trạng thái xóa dựa trên DeletedAt từ Backend
-            const isDeleted = item.deletedAt !== null;
+            const isItemDeleted = item.deletedAt !== null;
 
             return (
               <tr 
                 key={item.id} 
-                className={`${styles.tr} ${isDeleted ? styles.rowDeleted : ''}`}
+                className={`${styles.tr} ${isItemDeleted ? styles.rowDeleted : ''}`}
               >
-                {/* Cột Ảnh */}
+                {/* Cột Ảnh - Mờ đi nếu đã xóa */}
                 <td className={styles.td} style={{ textAlign: 'center' }}>
                   <img 
                     src={item.image || '/logo.png'} 
                     className={styles.productImg} 
-                    style={isDeleted ? { filter: 'grayscale(100%)', opacity: 0.6 } : {}}
+                    style={isItemDeleted ? { filter: 'grayscale(100%)', opacity: 0.5 } : {}}
                     alt="product" 
                   />
                 </td>
 
-                {/* Cột Tên & SKU */}
+                {/* Cột Tên & SKU - Gạch ngang nếu đã xóa */}
                 <td className={styles.td}>
                   <div style={{ 
                     fontWeight: 600, 
-                    color: isDeleted ? '#bfbfbf' : '#262626',
-                    textDecoration: isDeleted ? 'line-through' : 'none' 
+                    color: isItemDeleted ? '#bfbfbf' : '#262626',
+                    textDecoration: isItemDeleted ? 'line-through' : 'none' 
                   }}>
                     {item.name}
-                    {isDeleted && <span className={styles.deleteBadge}>Đã xóa</span>}
+                    {isItemDeleted && <span className={styles.deleteBadge}>Đã xóa</span>}
                   </div>
                   <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{item.sku}</div>
                 </td>
 
                 {/* Cột Danh mục & Nhãn hàng */}
-                <td className={styles.td} style={{ textAlign: 'center', color: isDeleted ? '#bfbfbf' : 'inherit' }}>
+                <td className={styles.td} style={{ textAlign: 'center', color: isItemDeleted ? '#bfbfbf' : 'inherit' }}>
                   <div style={{ fontWeight: 500 }}>{item.categoryName}</div>
                   <div style={{ fontSize: '12px', color: '#bfbfbf' }}>{item.brandName || '---'}</div>
                 </td>
 
                 {/* Cột GIÁ */}
                 <td className={styles.td} style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, color: isDeleted ? '#bfbfbf' : '#f5222d' }}>
+                  <div style={{ fontWeight: 700, color: isItemDeleted ? '#bfbfbf' : '#f5222d' }}>
                     {item.exportPrice?.toLocaleString()}đ
                   </div>
                   <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
@@ -82,32 +82,34 @@ const ProductTable: React.FC<ProductTableProps> = ({ data, loading, onEdit, onDe
                 <td className={styles.td} style={{ textAlign: 'center' }}>
                   <span 
                     className={styles.stockBadge} 
-                    style={isDeleted ? { background: '#f5f5f5', color: '#bfbfbf' } : { background: '#E6F7FF', color: '#1890FF' }}
+                    style={isItemDeleted ? { background: '#f5f5f5', color: '#bfbfbf' } : { background: '#E6F7FF', color: '#1890FF' }}
                   >
                     {item.stockQuantity}
                   </span>
                 </td>
 
                 {/* Cột Đơn vị & Vị trí */}
-                <td className={styles.td} style={{ textAlign: 'center', color: isDeleted ? '#bfbfbf' : 'inherit' }}>
+                <td className={styles.td} style={{ textAlign: 'center', color: isItemDeleted ? '#bfbfbf' : 'inherit' }}>
                   <div style={{ fontWeight: 500 }}>{item.unitName}</div>
                   <div style={{ fontSize: '11px', color: '#bfbfbf' }}>{item.location || '---'}</div>
                 </td>
 
-                {/* Hoạt động - Sửa logic Nút bấm theo yêu cầu của con */}
+                {/* Cột Hoạt động - Chuyển đổi giữa nút Xóa và Khôi phục */}
                 <td className={styles.td} style={{ textAlign: 'center' }}>
                   <div className="flex justify-center gap-2">
-                    <button 
-                      className={styles.actionBtn} 
-                      onClick={() => onEdit(item)}
-                    >
-                      Sửa
-                    </button>
-
-                    {isDeleted ? (
+                    {!isItemDeleted && (
                       <button 
                         className={styles.actionBtn} 
-                        style={{ color: '#52c41a' }} 
+                        onClick={() => onEdit(item)}
+                      >
+                        Sửa
+                      </button>
+                    )}
+
+                    {isItemDeleted ? (
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ color: '#52c41a', fontWeight: 'bold' }} 
                         onClick={() => onRestore(item.id)}
                       >
                         Khôi phục
