@@ -10,27 +10,38 @@ interface MainLayoutProps {
   currentPage: string;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPage }) => {
   return (
     <div className={styles.container}>
       
-      {/* 1. Gọi Component Header đã tách ở đây */}
       <Header />
 
-      {/* 2. NAV BAR - Giữ nguyên phần này */}
-      <nav className={styles.navBar}>
-        <div className={styles.navLinks}>
-          <NavLink to="/tong-quan" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Tổng quan</NavLink>
-          <NavLink to="/hang-hoa" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Hàng hóa</NavLink>
-          <NavLink to="/kho-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}> Kho hàng</NavLink>
-          <NavLink to="/bao-hanh" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Bảo hành</NavLink>
-          <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhà cung cấp</NavLink>
-          <NavLink to="/khach-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Khách hàng</NavLink>
-          <NavLink to="/nhan-vien" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem} style={{ textDecoration: 'none' }}>Nhân viên</NavLink>
+  <nav className={styles.navBar}>
+    <div className={styles.navLinks}>
+      <NavLink to="/tong-quan" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Tổng quan</NavLink>
+      
+      {/* Bắt đầu Dropdown Hàng Hóa */}
+      <div className={styles.dropdown}>
+        <NavLink to="/hang-hoa" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>
+          Hàng hóa <span style={{ marginLeft: '5px', fontSize: '10px' }}></span>
+        </NavLink>
+        
+        <div className={styles.dropdownContent}>
+          <NavLink to="/danh-muc">Danh mục</NavLink>
+          <NavLink to="/nhan-hang">Nhãn hàng</NavLink>
+          <NavLink to="/don-vi">Đơn vị</NavLink>
         </div>
-      </nav>
+      </div>
+      {/* Kết thúc Dropdown Hàng Hóa */}
 
-      {/* 3. PHẦN NỘI DUNG CHÍNH */}
+      <NavLink to="/kho-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Kho hàng</NavLink>
+      <NavLink to="/bao-hanh" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Bảo hành</NavLink>
+      <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Nhà cung cấp</NavLink>
+      <NavLink to="/khach-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Khách hàng</NavLink>
+    </div>
+  </nav>
+
+
       <main className={styles.mainWrapper}>
         <div className={styles.contentArea}>
           {children}

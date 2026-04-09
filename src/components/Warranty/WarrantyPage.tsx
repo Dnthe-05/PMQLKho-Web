@@ -12,7 +12,6 @@ export default function WarrantyPage() {
   } = useWarranties();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
   const indexOfLastItem = currentPage * pageSize;
   const indexOfFirstItem = indexOfLastItem - pageSize;
   const safeWarranties = Array.isArray(warranties) ? warranties : [];
@@ -63,7 +62,7 @@ export default function WarrantyPage() {
         <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>Đang tải...</div>
       ) : (
         <>
-          <WarrantyTable data={currentData} />
+          <WarrantyTable data={currentData}/>
           <Pagination 
             currentPage={currentPage}
             totalItems={safeWarranties.length}
@@ -71,6 +70,7 @@ export default function WarrantyPage() {
             onPageChange={(p) => setCurrentPage(p)}
           />
         </>
+        
       )}
     </div>
     </>

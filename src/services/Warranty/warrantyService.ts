@@ -25,3 +25,8 @@ export const createWarranty = async (warrantyData: any): Promise<ApiResponse<any
 export const getWarrantyById = async (id: number): Promise<ApiResponse<any>> => {
   return await axiosClient.get(`/api/WarrantyCard/${id}`);
 };
+
+//cập nhật phiếu bảo hành
+export const updateWarranty = async (id: number, data:any): Promise<ApiResponse<any>> => {
+  return await axiosClient.put(`/api/WarrantyCard/${id}`,data);
+};
