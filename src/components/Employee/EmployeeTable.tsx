@@ -8,9 +8,11 @@ interface EmployeeTableProps {
   loading: boolean;
   onEdit: (employee: Employee) => void;
   onDelete: (id: number) => void;
+  currentPage: number; 
+  pageSize: number;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete }) => {
+const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
   const safeData = data || [];
 
 
@@ -55,7 +57,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                 >
                   {/* Hiển thị Số thứ tự thay vì item.id */}
                   <td className={styles.td} style={{ textAlign: 'center', fontWeight: 'bold', color: isDeleted ? '#bfbfbf' : 'inherit' }}>
-                    {index + 1}
+                    {(currentPage - 1) * pageSize + index + 1}
                   </td>
 
                   {/* Tài khoản */}

@@ -128,6 +128,8 @@ const GetAllEmployeePage = () => {
             loading={loading} 
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
+            currentPage={currentPage}
+            pageSize={pageSize}
           />
           
           {employees.length > 0 && (
