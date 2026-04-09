@@ -38,6 +38,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPage }) => {
       <NavLink to="/bao-hanh" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Bảo hành</NavLink>
       <NavLink to="/ncc" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Nhà cung cấp</NavLink>
       <NavLink to="/khach-hang" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Khách hàng</NavLink>
+      <NavLink to="/nhan-vien" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Nhân Viên</NavLink>
     </div>
   </nav>
 
