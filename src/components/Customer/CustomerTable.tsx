@@ -1,29 +1,19 @@
 import React from 'react';
-import { type Employee } from '../../types/Employee/Employee';
+import { type Customer } from '../../types/Customer/Customer';
 
 import styles from '../../css/Product/ProductTable.module.css'; 
 
-interface EmployeeTableProps {
-  data: Employee[];
+interface CustomerTableProps {
+  data: Customer[];
   loading: boolean;
-  onEdit: (employee: Employee) => void;
+  onEdit: (customer: Customer) => void;
   onDelete: (id: number) => void;
   currentPage: number; 
   pageSize: number;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
+const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
   const safeData = data || [];
-
-
-  const getRoleName = (role?: number) => {
-    switch (role) {
-      case 1: return "Quản trị viên";
-      case 2: return "Nhân viên kho";
-      
-      default: return "Chưa xác định";
-    }
-  };
 
   if (loading) return <div className="text-center p-5">Đang tải dữ liệu...</div>;
 
@@ -32,11 +22,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
-
             <th className={styles.th} style={{ width: '60px', textAlign: 'center' }}>STT</th>
-            <th className={styles.th}>Tài khoản (Username)</th>
-            <th className={styles.th}>Họ và tên</th>
-            <th className={styles.th} style={{ textAlign: 'center' }}>Vai trò</th>
+            <th className={styles.th}>Thông tin khách hàng</th>
+            <th className={styles.th}>Địa chỉ giao hàng</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Trạng thái</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Hoạt động</th>
           </tr>
@@ -44,10 +32,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
         <tbody>
           {safeData.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>Không có dữ liệu nhân viên</td>
+              <td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>Không có dữ liệu khách hàng</td>
             </tr>
           ) : (
-            safeData.map((item: Employee, index: number) => {
+            safeData.map((item: Customer, index: number) => {
               const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
 
               return (
@@ -55,44 +43,39 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                   key={item.id} 
                   className={`${styles.tr} ${isDeleted ? styles.rowDeleted : ''}`}
                 >
-
+                  {/* Số thứ tự (STT) */}
                   <td className={styles.td} style={{ textAlign: 'center', fontWeight: 'bold', color: isDeleted ? '#bfbfbf' : 'inherit' }}>
                     {(currentPage - 1) * pageSize + index + 1}
                   </td>
 
-                  {/* Tài khoản */}
+                  {/* Thông tin khách hàng*/}
                   <td className={styles.td}>
                     <div style={{ 
                       fontWeight: 600, 
                       color: isDeleted ? '#bfbfbf' : '#262626',
                       textDecoration: isDeleted ? 'line-through' : 'none' 
                     }}>
-                      {item.username}
-                      {isDeleted && <span className={styles.deleteBadge}>Đã nghỉ</span>}
+                      {item.fullName}
+                      {isDeleted && <span className={styles.deleteBadge}>Đã xóa</span>}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#8c8c8c', marginTop: '4px' }}>
+                      📞 {item.phone} {item.email ? ` | ✉️ ${item.email}` : ''}
                     </div>
                   </td>
 
-                  {/* Họ và tên */}
+                  {/* Địa chỉ giao hàng */}
                   <td className={styles.td}>
-                    <div style={{ color: isDeleted ? '#bfbfbf' : '#595959' }}>{item.fullName}</div>
-                  </td>
-
-                  {/* Vai trò */}
-                  <td className={styles.td} style={{ textAlign: 'center' }}>
-                    <span 
-                      className={styles.stockBadge} 
-                      style={isDeleted ? { background: '#f5f5f5', color: '#bfbfbf' } : { background: '#F6FFED', color: '#389E0D' }}
-                    >
-                      {getRoleName(item.role)}
-                    </span>
+                    <div style={{ color: isDeleted ? '#bfbfbf' : '#595959', fontSize: '14px' }}>
+                      {item.shippingAddress || <span style={{ color: '#bfbfbf', fontStyle: 'italic' }}>Chưa cập nhật</span>}
+                    </div>
                   </td>
 
                   {/* Trạng thái */}
                   <td className={styles.td} style={{ textAlign: 'center' }}>
                     {isDeleted ? (
-                      <span style={{ color: '#bfbfbf', fontSize: '13px' }}>Đã nghỉ việc</span>
+                      <span style={{ color: '#bfbfbf', fontSize: '13px' }}>Ngừng hoạt động</span>
                     ) : (
-                      <span style={{ color: '#1890ff', fontSize: '13px' }}>Đang làm việc</span>
+                      <span style={{ color: '#1890ff', fontSize: '13px' }}>Đang hoạt động</span>
                     )}
                   </td>
 
@@ -127,4 +110,4 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
   );
 };
 
-export default EmployeeTable;
+export default CustomerTable;

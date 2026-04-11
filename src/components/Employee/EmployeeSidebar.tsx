@@ -50,7 +50,7 @@ const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ filters, onFilterChan
           </select>
         </div>
 
-        {/* 2. Trạng thái hoạt động (Dropdown thay vì Checkbox) */}
+        {/* 2. Trạng thái hoạt động */}
         <div className={styles.filterGroup} style={{ marginTop: '16px' }}>
           <label className={styles.label}>Trạng thái</label>
           <select

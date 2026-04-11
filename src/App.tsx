@@ -6,6 +6,7 @@ import GetAllProductPage from './components/Product/GetAllProductPage';
 import WarrantyDetailPage from './components/Warranty/WarrantyDetailPage';
 import WarrantyPage from './components/Warranty/WarrantyPage';
 import GetAllEmployeePage from './components/Employee/GetAllEmployeePage';
+import GetAllCustomerPage from './components/Customer/GetAllCustomerPage';
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
     <h2>Chào mừng đến với hệ thống CAG PRO</h2>
@@ -35,12 +36,20 @@ const App = () => {
             <GetAllProductPage />
           </MainLayout>
         } />
+
         <Route path="/bao-hanh" element={
           <MainLayout currentPage="Bảo Hành">
             <WarrantyPage/>
           </MainLayout>
         } />
+        
         <Route path="/bao-hanh/chi-tiet/:id" element={<WarrantyDetailPage />} />
+
+        <Route path="/khach-hang" element={
+          <MainLayout currentPage="Khách hàng">
+            <GetAllCustomerPage />
+          </MainLayout>
+        } />
 
         <Route path="/nhan-vien" element={
           <MainLayout currentPage="Nhân Viên">
