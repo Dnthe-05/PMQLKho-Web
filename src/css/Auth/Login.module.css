@@ -1,0 +1,95 @@
+.loginPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f4f7f6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.loginCard {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 380px; /* Độ rộng tối ưu */
+  text-align: center;
+}
+
+.header {
+  margin-bottom: 30px;
+}
+
+.logo {
+  width: 70px; /* Thu nhỏ logo lại cho tinh tế */
+  height: auto;
+  margin: 0 auto 15px auto;
+  display: block;
+}
+
+.header h2 {
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.form {
+  text-align: left;
+}
+
+.inputGroup {
+  margin-bottom: 18px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.inputGroup input:focus {
+  border-color: #d32f2f;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.errorMsg {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-bottom: 15px;
+  text-align: center;
+  background: #ffebee;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.btnLogin {
+  width: 100%;
+  padding: 14px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btnLogin:hover {
+  background-color: #b71c1c;
+}
