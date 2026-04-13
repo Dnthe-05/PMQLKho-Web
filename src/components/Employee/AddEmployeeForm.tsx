@@ -94,7 +94,7 @@ export default function AddEmployeeForm({ isOpen, onClose, onSuccess }: Props) {
           <button onClick={handleClose} className={styles.btnCloseHeader}>&times;</button>
         </div>
 
-        {/* Giữ nguyên div thay vì form */}
+
         <div className={styles.form}>
           
           <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', zIndex: -1 }}>

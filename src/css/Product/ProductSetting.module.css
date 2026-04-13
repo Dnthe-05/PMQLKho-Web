@@ -1,0 +1,31 @@
+.tabContainer {
+  background-color: #a80000; /* Màu đỏ đậm của CAG PRO */
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tabBtn {
+  padding: 12px 24px;
+  font-size: 16px; /* Cho chữ bự ra */
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: transparent;
+  color: #ffcccc; /* Màu chữ khi chưa chọn */
+}
+
+.tabBtnActive {
+  background: #fff;
+  color: #a80000; /* Chữ đỏ trên nền trắng */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.tabBtn:hover:not(.tabBtnActive) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
