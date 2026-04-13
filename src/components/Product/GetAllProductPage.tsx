@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
-import { getProducts, deleteProduct } from '../../services/Product/productService'; 
-import { type Product } from '../../types/Product/product';
-import { type ProductFilter } from '../../types/Product/productFilter';
-import AddProductForm from './AddProductform';
-import ProductTable from './ProductTable';
-import ProductSidebar from './ProductSidebar';
-import Button from '../Common/Button';
-import Pagination from '../Pagination';
-import ConfirmModal from '../ConfirmModal';
-import EditProductForm from './EditProductForm';
+import { useState, useEffect } from "react";
+import {
+  getProducts,
+  deleteProduct,
+} from "../../services/Product/productService";
+import { type Product } from "../../types/Product/product";
+import { type ProductFilter } from "../../types/Product/productFilter";
+import AddProductForm from "./AddProductform";
+import ProductTable from "./ProductTable";
+import ProductSidebar from "./ProductSidebar";
+import Button from "../Common/Button";
+import Pagination from "../Pagination";
+import ConfirmModal from "../ConfirmModal";
+import EditProductForm from "./EditProductForm";
 
 const GetAllProductPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,11 +30,11 @@ const GetAllProductPage = () => {
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     id: number | null;
-    type: 'DELETE' | 'RESTORE' | null;
+    type: "DELETE" | "RESTORE" | null;
   }>({
     isOpen: false,
     id: null,
-    type: null
+    type: null,
   });
 
   const fetchProducts = async () => {
@@ -56,9 +59,12 @@ const GetAllProductPage = () => {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, [filters, currentPage]);
-  useEffect(() => { setCurrentPage(1); }, [filters]);
-
+  useEffect(() => {
+    fetchProducts();
+  }, [filters, currentPage]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -69,7 +75,7 @@ const GetAllProductPage = () => {
     setConfirmConfig({
       isOpen: true,
       id: id,
-      type: 'DELETE'
+      type: "DELETE",
     });
   };
 
@@ -77,24 +83,24 @@ const GetAllProductPage = () => {
     setConfirmConfig({
       isOpen: true,
       id: id,
-      type: 'RESTORE'
+      type: "RESTORE",
     });
   };
 
-    const handleExecuteConfirm = async () => {
-      if (!confirmConfig.id) return;
+  const handleExecuteConfirm = async () => {
+    if (!confirmConfig.id) return;
 
-      try {
-          await deleteProduct(confirmConfig.id); 
-          
-          console.log("Thao tác thành công!");
-          
-          await fetchProducts(); 
-      } catch (error) {
-          console.error("Lỗi API:", error);
-      } finally {
-          setConfirmConfig({ isOpen: false, id: null, type: null });
-      }
+    try {
+      await deleteProduct(confirmConfig.id);
+
+      console.log("Thao tác thành công!");
+
+      await fetchProducts();
+    } catch (error) {
+      console.error("Lỗi API:", error);
+    } finally {
+      setConfirmConfig({ isOpen: false, id: null, type: null });
+    }
   };
 
   return (
@@ -110,10 +116,13 @@ const GetAllProductPage = () => {
                 type="text"
                 placeholder="Tìm theo mã SKU, tên sản phẩm..."
                 className="bg-transparent border-none outline-none w-full text-base font-semibold text-gray-700"
-                value={filters.searchTerm || ''}
+                value={filters.searchTerm || ""}
                 onChange={(e) => {
                   const val = e.target.value;
-                  setFilters({ ...filters, searchTerm: val === "" ? undefined : val });
+                  setFilters({
+                    ...filters,
+                    searchTerm: val === "" ? undefined : val,
+                  });
                 }}
               />
             </div>
@@ -132,11 +141,11 @@ const GetAllProductPage = () => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onRestore={handleRestore}
-            isDeleted={filters.isDeleted} 
+            isDeleted={filters.isDeleted}
           />
 
           {products.length > 0 && (
-            <div className="p-4 border-t border-gray-100 flex justify-center bg-white">
+            <div className="p-4 border-t border-gray-100 flex justify-end bg-white">
               <Pagination
                 currentPage={currentPage}
                 totalItems={totalItems}
@@ -151,14 +160,20 @@ const GetAllProductPage = () => {
       {/* 6. Render ConfirmModal */}
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
-        title={confirmConfig.type === 'DELETE' ? "Xác nhận xóa" : "Xác nhận khôi phục"}
+        title={
+          confirmConfig.type === "DELETE"
+            ? "Xác nhận xóa"
+            : "Xác nhận khôi phục"
+        }
         message={
-          confirmConfig.type === 'DELETE'
+          confirmConfig.type === "DELETE"
             ? "Bạn có chắc chắn muốn đưa sản phẩm này vào thùng rác không?"
             : "Bạn muốn khôi phục sản phẩm này về trạng thái đang kinh doanh?"
         }
         onConfirm={handleExecuteConfirm}
-        onCancel={() => setConfirmConfig({ isOpen: false, id: null, type: null })}
+        onCancel={() =>
+          setConfirmConfig({ isOpen: false, id: null, type: null })
+        }
       />
 
       {/* Modal Thêm mới */}

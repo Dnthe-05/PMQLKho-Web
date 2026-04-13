@@ -1,5 +1,7 @@
 import axiosClient from '../../API/axiosClient';
-
+// import { type Product } from '../../types/Product/product';
+// import { type ProductFilter } from '../../types/Product/productFilter';
+// import { type ProductResponse } from '../../types/Product/productResponse';
 
 export interface BaseAttribute {
     id: number;
@@ -49,4 +51,5 @@ export const getProductBySerial = async (serialCode: string) => {
 export const getAttributes = async (): Promise<BaseAttribute[]> => {
     const response = await axiosClient.get("/api/attribute");
     return response.data;
+
 };
