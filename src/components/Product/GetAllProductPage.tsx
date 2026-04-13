@@ -136,7 +136,7 @@ const GetAllProductPage = () => {
           />
 
           {products.length > 0 && (
-            <div className="p-4 border-t border-gray-100 flex justify-end bg-white">
+            <div className="p-4 border-t border-gray-100 flex justify-center bg-white">
               <Pagination
                 currentPage={currentPage}
                 totalItems={totalItems}

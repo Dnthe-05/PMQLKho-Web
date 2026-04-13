@@ -1,6 +1,11 @@
 import axiosClient from '../../API/axiosClient';
 
 
+export interface BaseAttribute {
+    id: number;
+    name: string;
+}
+
 export const getProducts = async (filters: any): Promise<any> => {
     const response = await axiosClient.get("/api/product", { params: filters });
 
@@ -11,22 +16,20 @@ export const createProduct = async (data: any) => {
     return await axiosClient.post("/api/product", data);
 };
 
-// Get data api from category
-export const getCategories = async (): Promise<string[]> => {
+export const getCategories = async (): Promise<any> => {
     const response = await axiosClient.get("/api/category");
-    return response.data; 
+    // Phải lấy .items nếu có phân trang, hoặc .data tùy cấu trúc axios
+    return response.data.items || response.data; 
 };
 
-// Get data api brand
-export const getBrands = async (): Promise<string[]> => {
+export const getBrands = async (): Promise<any> => {
     const response = await axiosClient.get("/api/brand");
-    return response.data;
+    return response.data.items || response.data;
 };
 
-// Get data api unit
-export const getUnits = async (): Promise<string[]> => {
+export const getUnits = async (): Promise<any> => {
     const response = await axiosClient.get("/api/unit");
-    return response.data;
+    return response.data.items || response.data;
 };
 
 export const deleteProduct = async (id: number) => {
@@ -42,3 +45,8 @@ export const getProductBySerial = async (serialCode: string) => {
   return await axiosClient.get(`/api/WarrantyCard/get-product-name/${serialCode}`);
 
 }
+
+export const getAttributes = async (): Promise<BaseAttribute[]> => {
+    const response = await axiosClient.get("/api/attribute");
+    return response.data;
+};

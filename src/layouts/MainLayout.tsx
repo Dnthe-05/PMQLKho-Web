@@ -15,14 +15,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, user }) => {
 
       <nav className={styles.navBar}>
         <div className={styles.navLinks}>
-          <NavLink to="/tong-quan" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Tổng quan</NavLink>
+          <NavLink to="/tong-quan" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>
+            Tổng quan
+          </NavLink>
           
+          {/* Cấu trúc Dropdown chuẩn: dropdownContent phải nằm TRONG dropdown */}
           <div className={styles.dropdown}>
-            <NavLink to="/hang-hoa" className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}>Hàng hóa</NavLink>
+            <NavLink 
+              to="/hang-hoa" 
+              className={({ isActive }) => isActive ? styles.navItemActive : styles.navItem}
+            >
+              Hàng hóa
+            </NavLink>
+            
             <div className={styles.dropdownContent}>
-              <NavLink to="/danh-muc">Danh mục</NavLink>
-              <NavLink to="/nhan-hang">Nhãn hàng</NavLink>
-              <NavLink to="/don-vi">Đơn vị</NavLink>
+              <NavLink to="/thiet-lap-san-pham?tab=attribute">Thuộc tính</NavLink>
             </div>
           </div>
 

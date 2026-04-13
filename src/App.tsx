@@ -9,6 +9,7 @@ import GetAllEmployeePage from './components/Employee/GetAllEmployeePage';
 import LoginPage from './components/Auth/LoginPopup'; 
 import { getProfile } from './services/Auth/authService';
 import GetAllCustomerPage from './components/Customer/GetAllCustomerPage';
+import ProductSetting from './pages/Product/ProductSetting';
 
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -91,6 +92,9 @@ const App = () => {
           ) : (
             <Navigate to="/login" replace />
           )
+        } />
+        <Route path="/thiet-lap-san-pham" element={
+          user ? <MainLayout user={user}><ProductSetting /></MainLayout> : <Navigate to="/login" replace />
         } />
 
         <Route path="*" element={<Navigate to={user ? "/tong-quan" : "/login"} replace />} />
