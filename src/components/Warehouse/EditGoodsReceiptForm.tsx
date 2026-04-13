@@ -33,8 +33,8 @@ export default function EditGoodsReceiptForm({
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [code, setCode] = useState(""); // Chỉ để hiển thị, không cho sửa
-  const [supplierName, setSupplierName] = useState(""); // Chỉ hiển thị
+  const [code, setCode] = useState("");
+  const [supplierName, setSupplierName] = useState("");
   const [note, setNote] = useState("");
 
   const [details, setDetails] = useState<SelectedProductDetail[]>([]);
@@ -43,7 +43,6 @@ export default function EditGoodsReceiptForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  // 1. Load danh sách sản phẩm để có thể thêm SP mới khi sửa
   useEffect(() => {
     if (isOpen) {
       getProducts({}).then((res) => {
@@ -53,13 +52,12 @@ export default function EditGoodsReceiptForm({
     }
   }, [isOpen]);
 
-  // Trong useEffect của EditGoodsReceiptForm.tsx
   useEffect(() => {
     if (isOpen && receiptId) {
       setIsLoadingData(true);
       getGoodsReceiptById(receiptId)
         .then((res: any) => {
-          const data = res.data || res;
+          const data = res.data?.data || res.data || res;
           setCode(data.code);
           setSupplierName(data.supplierName || data.supplier?.name);
           setNote(data.note || "");
@@ -72,22 +70,18 @@ export default function EditGoodsReceiptForm({
                 sku: d.productSku || d.sku || "N/A",
                 importPrice: d.importPrice || 0,
                 quantity: d.quantity || 0,
-                // SỬA TẠI ĐÂY: Kiểm tra mọi trường có thể chứa danh sách Serial
-                serials: Array.isArray(d.serials)
-                  ? d.serials
-                  : Array.isArray(d.serialNumbers)
-                    ? d.serialNumbers
+                serials: Array.isArray(d.serialNumbers)
+                  ? d.serialNumbers
+                  : Array.isArray(d.serials)
+                    ? d.serials
                     : [],
               }),
             );
             setDetails(mappedDetails);
           }
-          setIsLoadingData(false);
         })
-        .catch((err) => {
-          console.error("Lỗi load chi tiết:", err);
-          setIsLoadingData(false);
-        });
+        .catch((err) => console.error("Lỗi load chi tiết:", err))
+        .finally(() => setIsLoadingData(false));
     }
   }, [isOpen, receiptId]);
 
@@ -117,10 +111,9 @@ export default function EditGoodsReceiptForm({
   const handleAddSerial = () => {
     const sTrim = serialInput.trim();
     if (!sTrim || activeProductId === null) return;
-    if (details.some((d) => d.serials.includes(sTrim))) {
-      alert("Mã Serial này đã tồn tại!");
-      return;
-    }
+    if (details.some((d) => d.serials.includes(sTrim)))
+      return alert("Mã Serial này đã tồn tại!");
+
     setDetails((prev) =>
       prev.map((item) => {
         if (item.productId === activeProductId) {
@@ -156,33 +149,29 @@ export default function EditGoodsReceiptForm({
   };
 
   const removeRow = (productId: number) => {
+    if (!window.confirm("Xóa dòng này?")) return;
     setDetails(details.filter((d) => d.productId !== productId));
     if (activeProductId === productId) setActiveProductId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!receiptId) return;
-    if (details.length === 0)
-      return alert("Phiếu nhập không được để trống sản phẩm!");
-
+    if (details.length === 0) return alert("Sản phẩm rỗng!");
     setIsSubmitting(true);
     try {
       const payload: GoodsReceiptUpdateDto = {
         note: note.trim(),
-        // Map lại đúng ProductGroups cho logic Update Backend
         productGroups: details.map((d) => ({
           productId: d.productId,
           serials: d.serials,
         })),
       };
-
-      await updateGoodsReceipt(receiptId, payload);
-      alert("Cập nhật phiếu nhập thành công!");
+      await updateGoodsReceipt(receiptId!, payload);
+      alert("Cập nhật thành công!");
       onSuccess();
       onClose();
     } catch (error: any) {
-      alert(error.response?.data?.message || "Lỗi khi cập nhật");
+      alert(error.response?.data?.message || "Lỗi cập nhật");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,9 +179,31 @@ export default function EditGoodsReceiptForm({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={styles.modalContent} style={{ maxWidth: "850px" }}>
-        <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Chỉnh Sửa Phiếu Nhập: {code}</h2>
+      <div
+        className={styles.modalContent}
+        style={{
+          width: "80vw",
+          maxWidth: "1300px",
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh",
+          overflow: "hidden",
+        }}
+      >
+        {/* HEADER */}
+        <div
+          className={styles.modalHeader}
+          style={{
+            padding: "15px 20px",
+            borderBottom: "1px solid #eee",
+            flexShrink: 0,
+          }}
+        >
+          <h2 className={styles.modalTitle}>
+            Chỉnh Sửa Phiếu Nhập:{" "}
+            <span style={{ color: "#F23A3A" }}>{code}</span>
+          </h2>
           <button
             type="button"
             className={styles.btnCloseHeader}
@@ -203,208 +214,79 @@ export default function EditGoodsReceiptForm({
         </div>
 
         {isLoadingData ? (
-          <div style={{ padding: "20px", textAlign: "center" }}>
+          <div style={{ padding: "50px", textAlign: "center" }}>
             Đang tải dữ liệu...
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div className={styles.row}>
-              <div className={styles.formGroup}>
-                <label>Mã phiếu (Không được sửa)</label>
-                <input
-                  type="text"
-                  value={code}
-                  disabled
-                  style={{ backgroundColor: "#f5f5f5" }}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Nhà cung cấp</label>
-                <input
-                  type="text"
-                  value={supplierName}
-                  disabled
-                  style={{ backgroundColor: "#f5f5f5" }}
-                />
-              </div>
-            </div>
-
-            <div className={styles.row}>
-              <div className={styles.formGroup} style={{ flex: 1 }}>
-                <label>Ghi chú</label>
-                <input
-                  type="text"
-                  value={note}
-                  placeholder="Nhập ghi chú..."
-                  onChange={(e) => setNote(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <hr
-              style={{
-                margin: "15px 0",
-                border: "none",
-                borderTop: "1px solid #eee",
-              }}
-            />
-
-            {/* 1. TÌM KIẾM SẢN PHẨM MỚI (NẾU MUỐN THÊM VÀO PHIẾU CŨ) */}
-            <div className={styles.formGroup} style={{ position: "relative" }}>
-              <label style={{ fontWeight: "bold" }}>
-                1. Thêm sản phẩm mới vào phiếu
-              </label>
-              <input
-                type="text"
-                placeholder="Nhập tên hoặc SKU SP mới..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setShowDropdown(true);
-                }}
-                style={{ border: "2px solid #ccc" }}
-              />
-              {showDropdown && searchTerm && (
-                <div
-                  style={{
-                    position: "absolute",
-                    zIndex: 100,
-                    width: "100%",
-                    background: "#fff",
-                    border: "1px solid #ddd",
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                    maxHeight: "200px",
-                    overflowY: "auto",
-                  }}
-                >
-                  {productList
-                    .filter(
-                      (p) =>
-                        p.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase()) ||
-                        p.sku.toLowerCase().includes(searchTerm.toLowerCase()),
-                    )
-                    .map((p) => (
-                      <div
-                        key={p.id}
-                        onClick={() => handleSelectProduct(p)}
-                        style={{
-                          padding: "10px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #eee",
-                        }}
-                      >
-                        <strong>{p.sku}</strong> - {p.name}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* 2. NHẬP SERIAL */}
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flex: 1, overflow: "hidden" }}
+          >
+            {/* CỘT TRÁI (75%) */}
             <div
-              className={styles.formGroup}
               style={{
-                background: activeProductId ? "#fff5f5" : "#f9f9f9",
-                padding: "15px",
-                borderRadius: "8px",
-                border: activeProductId
-                  ? "1px solid #F23A3A"
-                  : "1px solid #ddd",
+                flex: 1,
+                padding: "20px",
+                overflowY: "auto",
+                borderRight: "1px solid #eee",
+                backgroundColor: "#fcfcfc",
               }}
             >
-              <label
+              <h3
                 style={{
-                  color: activeProductId ? "#F23A3A" : "#666",
+                  fontSize: "14px",
+                  marginBottom: "15px",
+                  color: "#666",
                   fontWeight: "bold",
                 }}
               >
-                {activeProductId
-                  ? `2. Đang nhập Serial cho: ${details.find((d) => d.productId === activeProductId)?.productName}`
-                  : "Chọn sản phẩm bên dưới để nhập Serial"}
-              </label>
-              <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-                <input
-                  type="text"
-                  disabled={!activeProductId}
-                  value={serialInput}
-                  placeholder="Nhập Serial mới..."
-                  onChange={(e) => setSerialInput(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), handleAddSerial())
-                  }
-                  style={{
-                    flex: 1,
-                    border: activeProductId
-                      ? "2px solid #F23A3A"
-                      : "1px solid #ccc",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddSerial}
-                  disabled={!activeProductId}
-                  style={{
-                    background: "#F23A3A",
-                    color: "white",
-                    padding: "0 25px",
-                    border: "none",
-                    borderRadius: "5px",
-                  }}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* 3. BẢNG DANH SÁCH (HIỂN THỊ DẠNG TAG TRONG BẢNG) */}
-            <div
-              style={{
-                marginTop: "20px",
-                maxHeight: "300px",
-                overflowY: "auto",
-                border: "1px solid #eee",
-                borderRadius: "8px",
-              }}
-            >
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead
-                  style={{
-                    background: "#f8f9fa",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1,
-                  }}
-                >
-                  <tr>
-                    <th
-                      style={{
-                        padding: "12px 15px",
-                        textAlign: "left",
-                        fontSize: "14px",
-                      }}
-                    >
-                      Sản phẩm/SKU
-                    </th>
-                    <th style={{ textAlign: "center", fontSize: "14px" }}>
-                      Giá nhập
-                    </th>
-                    <th style={{ textAlign: "center", fontSize: "14px" }}>
-                      SL
-                    </th>
-                    <th style={{ textAlign: "center", fontSize: "14px" }}>
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {details.map((item) => (
-                    <React.Fragment key={item.productId}>
+                Chi tiết vật tư trong phiếu
+              </h3>
+              <div
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  background: "#fff",
+                  overflow: "hidden",
+                }}
+              >
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead
+                    style={{
+                      background: "#f8f9fa",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                    }}
+                  >
+                    <tr>
+                      <th
+                        style={{
+                          padding: "12px",
+                          textAlign: "left",
+                          fontSize: "13px",
+                        }}
+                      >
+                        Sản phẩm/SKU
+                      </th>
+                      <th style={{ textAlign: "center", fontSize: "13px" }}>
+                        Giá nhập
+                      </th>
+                      <th style={{ textAlign: "center", fontSize: "13px" }}>
+                        SL
+                      </th>
+                      <th style={{ textAlign: "center", fontSize: "13px" }}>
+                        Xóa
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {details.map((item) => (
                       <tr
+                        key={item.productId}
                         onClick={() => setActiveProductId(item.productId)}
                         style={{
-                          borderTop: "1px solid #eee",
+                          borderBottom: "1px solid #eee",
                           cursor: "pointer",
                           backgroundColor:
                             activeProductId === item.productId
@@ -412,62 +294,53 @@ export default function EditGoodsReceiptForm({
                               : "transparent",
                         }}
                       >
-                        <td style={{ padding: "12px 15px" }}>
+                        <td style={{ padding: "12px" }}>
                           <div
                             style={{
                               fontWeight: "bold",
-                              fontSize: "15px",
-                              color: "#333",
+                              fontSize: "14px",
+                              color:
+                                activeProductId === item.productId
+                                  ? "#F23A3A"
+                                  : "#333",
                             }}
                           >
                             {item.productName}
                           </div>
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              color: "#666",
-                              marginTop: "2px",
-                            }}
-                          >
+                          <small style={{ color: "#888" }}>
                             SKU: {item.sku}
-                          </div>
-
-                          {/* VÙNG HIỂN THỊ SERIAL DẠNG TAG NGAY DƯỚI TÊN SP */}
+                          </small>
                           <div
                             style={{
                               display: "flex",
                               flexWrap: "wrap",
-                              gap: "6px",
-                              marginTop: "8px",
+                              gap: "4px",
+                              marginTop: "6px",
                             }}
                           >
                             {item.serials.map((sn, idx) => (
                               <span
                                 key={idx}
                                 style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  background: "#fff",
+                                  background: "#f0f0f0",
                                   border: "1px solid #ddd",
-                                  padding: "2px 8px",
+                                  padding: "1px 6px",
                                   borderRadius: "4px",
-                                  fontSize: "12px",
-                                  color: "#444",
+                                  fontSize: "11px",
+                                  display: "flex",
+                                  alignItems: "center",
                                 }}
                               >
-                                {sn}
+                                {sn}{" "}
                                 <span
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     removeSingleSerial(item.productId, sn);
                                   }}
                                   style={{
-                                    marginLeft: "6px",
-                                    cursor: "pointer",
+                                    marginLeft: "5px",
                                     color: "#ff4d4f",
                                     fontWeight: "bold",
-                                    fontSize: "14px",
-                                    lineHeight: "1",
                                   }}
                                 >
                                   ×
@@ -476,28 +349,22 @@ export default function EditGoodsReceiptForm({
                             ))}
                           </div>
                         </td>
-
-                        <td style={{ textAlign: "center", color: "#444" }}>
-                          {item.importPrice.toLocaleString()} ₫
+                        <td style={{ textAlign: "center", fontSize: "14px" }}>
+                          {item.importPrice?.toLocaleString()} ₫
                         </td>
-
                         <td style={{ textAlign: "center" }}>
-                          <span
+                          <b
                             style={{
                               background: "#F23A3A",
                               color: "white",
-                              padding: "2px 8px",
-                              borderRadius: "50%",
+                              padding: "2px 10px",
+                              borderRadius: "12px",
                               fontSize: "12px",
-                              fontWeight: "bold",
-                              display: "inline-block",
-                              minWidth: "20px",
                             }}
                           >
                             {item.quantity}
-                          </span>
+                          </b>
                         </td>
-
                         <td style={{ textAlign: "center" }}>
                           <button
                             type="button"
@@ -509,43 +376,215 @@ export default function EditGoodsReceiptForm({
                               border: "none",
                               background: "none",
                               cursor: "pointer",
-                              fontSize: "18px",
-                              opacity: 0.6,
+                              color: "#999",
                             }}
                           >
                             🗑️
                           </button>
                         </td>
                       </tr>
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div className={styles.formActions} style={{ marginTop: "20px" }}>
-              <button
-                type="button"
-                className={styles.btnCancel}
-                onClick={onClose}
+            {/* CỘT PHẢI (25%) */}
+            <div
+              style={{
+                width: "380px",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#fff",
+              }}
+            >
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+                <div
+                  style={{
+                    marginBottom: "20px",
+                    padding: "15px",
+                    background: "#f9f9f9",
+                    borderRadius: "8px",
+                    border: "1px solid #eee",
+                  }}
+                >
+                  <p style={{ margin: "0 0 8px 0", fontSize: "13px" }}>
+                    <strong>Nhà cung cấp:</strong> {supplierName}
+                  </p>
+                  <p style={{ margin: 0, fontSize: "13px" }}>
+                    <strong>Mã phiếu:</strong> {code}
+                  </p>
+                </div>
+
+                <div
+                  className={styles.formGroup}
+                  style={{ marginBottom: "15px" }}
+                >
+                  <label style={{ fontSize: "13px", fontWeight: "600" }}>
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Nhập ghi chú điều chỉnh..."
+                    style={{
+                      width: "100%",
+                      height: "70px",
+                      padding: "10px",
+                      borderRadius: "6px",
+                      border: "1px solid #ddd",
+                      fontSize: "13px",
+                    }}
+                  />
+                </div>
+
+                <div
+                  className={styles.formGroup}
+                  style={{ position: "relative", marginBottom: "15px" }}
+                >
+                  <label style={{ fontSize: "13px", fontWeight: "600" }}>
+                    1. Thêm SP mới
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Tìm tên hoặc SKU..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                  />
+                  {showDropdown && searchTerm && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        zIndex: 100,
+                        width: "100%",
+                        background: "#fff",
+                        border: "1px solid #ddd",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        maxHeight: "150px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {productList
+                        .filter((p) =>
+                          (p.name + p.sku)
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()),
+                        )
+                        .map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => handleSelectProduct(p)}
+                            style={{
+                              padding: "10px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #eee",
+                              fontSize: "13px",
+                            }}
+                          >
+                            <strong>{p.sku}</strong> - {p.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    background: "#fff5f5",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    border: "1px solid #F23A3A",
+                  }}
+                >
+                  <label
+                    style={{
+                      color: "#F23A3A",
+                      fontWeight: "bold",
+                      fontSize: "12px",
+                    }}
+                  >
+                    2. QUÉT THÊM SERIAL
+                  </label>
+                  <div
+                    style={{ display: "flex", gap: "8px", marginTop: "8px" }}
+                  >
+                    <input
+                      type="text"
+                      disabled={!activeProductId}
+                      value={serialInput}
+                      placeholder="Quét mã..."
+                      onChange={(e) => setSerialInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(), handleAddSerial())
+                      }
+                      style={{
+                        flex: 1,
+                        border: "2px solid #F23A3A",
+                        padding: "8px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSerial}
+                      disabled={!activeProductId}
+                      style={{
+                        background: "#F23A3A",
+                        color: "white",
+                        padding: "0 15px",
+                        border: "none",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
                 style={{
-                  width: "100%",
-                  border: "none",
-                  background: "none",
-                  color: "#666",
-                  textDecoration: "underline",
-                  cursor: "pointer",
+                  padding: "15px 20px",
+                  borderTop: "1px solid #eee",
+                  backgroundColor: "#fff",
+                  flexShrink: 0,
                 }}
               >
-                Hủy bỏ
-              </button>
-              <button
-                type="submit"
-                className={styles.btnSubmit}
-                disabled={isSubmitting || details.length === 0}
-              >
-                Lưu Thay Đổi
-              </button>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={isSubmitting || details.length === 0}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    marginBottom: "10px",
+                    background: "#F23A3A",
+                    fontWeight: "bold",
+                    border: "none",
+                    color: "white",
+                    borderRadius: "6px",
+                  }}
+                >
+                  {isSubmitting ? "ĐANG LƯU..." : "XÁC NHẬN CẬP NHẬT"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnCancel}
+                  onClick={onClose}
+                  style={{
+                    width: "100%",
+                    background: "none",
+                    border: "1px solid #ddd",
+                    color: "#666",
+                    padding: "8px",
+                  }}
+                >
+                  Hủy bỏ
+                </button>
+              </div>
             </div>
           </form>
         )}

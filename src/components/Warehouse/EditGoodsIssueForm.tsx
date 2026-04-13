@@ -471,11 +471,7 @@ export default function EditGoodsIssueForm({
                       marginTop: "10px",
                       lineHeight: "1.4",
                     }}
-                  >
-                    * Việc <b>Xóa</b> sản phẩm ở bảng bên trái sẽ khiến mã
-                    Serial đó được giải phóng và cộng lại vào tồn kho khi bạn
-                    nhấn <b>Cập nhật</b>.
-                  </p>
+                  ></p>
                 </div>
               </div>
 
@@ -510,11 +506,10 @@ export default function EditGoodsIssueForm({
                   onClick={onClose}
                   style={{
                     width: "100%",
-                    border: "none",
                     background: "none",
+                    border: "1px solid #ddd",
                     color: "#666",
-                    textDecoration: "underline",
-                    cursor: "pointer",
+                    padding: "8px",
                   }}
                 >
                   Hủy bỏ
