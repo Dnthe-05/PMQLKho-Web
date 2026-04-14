@@ -1,5 +1,4 @@
 import axiosClient from '../../API/axiosClient';
-
 export interface BaseAttribute {
     id: number;
     name: string;
@@ -131,4 +130,5 @@ export const updateUnit = async (type: string, id: number, data: { name: string 
 export const deleteUnit = async (type: string, id: number) => {
     const response = await axiosClient.delete(`/api/${type}/${id}`);
     return response.data;
+
 };

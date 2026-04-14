@@ -159,3 +159,72 @@
   width: 100%;
   height: 10px; /* Tạo cầu nối 10px để rê chuột mượt hơn */
 }
+/*thương thêm*/
+/* Container bọc các link */
+.navLinks {
+  display: flex;
+  align-items: stretch; /* Ép tất cả các con cao bằng cha (navBar) */
+  height: 100%;
+}
+
+/* Mục Kho hàng */
+.dropdown {
+  position: relative;
+  display: flex;         /* Chuyển sang flex để dùng align-items */
+  align-items: center;   /* Căn giữa chữ Kho hàng theo chiều dọc */
+  height: 100%;          /* Cao 100% để padding ăn khớp với các NavLink */
+}
+
+/* Nhãn chữ "Kho hàng" */
+.navItemLabel {
+  display: flex;
+  align-items: center;
+  height: 100%;          /* Chiếm toàn bộ chiều cao thanh nav */
+  padding: 0 20px;       /* Padding này phải khớp với padding của .navItem cũ */
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: default;       /* Không cho hiện bàn tay để biết không click được */
+  white-space: nowrap;
+}
+
+/* Mũi tên */
+.arrow {
+  margin-left: 6px;
+  font-size: 10px;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Nội dung xổ xuống */
+.dropdownContent {
+  display: none;
+  position: absolute;
+  top: 100%;             /* Luôn nằm sát mép dưới thanh nav */
+  left: 0;
+  background-color: #fff;
+  min-width: 150px;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-radius: 4px;
+  overflow: hidden;      /* Để dropdownItem hover không bị tràn bo góc */
+}
+
+.dropdown:hover .dropdownContent {
+  display: block;
+}
+
+/* Các item bên trong (Nhập/Xuất) */
+.dropdownItem {
+  color: #333 !important;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #f5f5f5;
+  color: #e31e24 !important; /* Màu đỏ của bạn */
+}
