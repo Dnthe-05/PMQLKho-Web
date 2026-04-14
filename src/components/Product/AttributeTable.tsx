@@ -7,15 +7,15 @@ interface AttributeTableProps {
   onAdd: () => void;
   onEdit: (item: BaseAttribute) => void;
   onDelete: (id: number) => void;
-  loading?: boolean;     
-  searchTerm?: string;    
-  onSearchChange?: (term: string) => void; 
+  onRestore?: (id: number) => void; // Thêm hàm khôi phục
+  loading?: boolean;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
-
-export default function AttributeTable({ 
-  title, data, onAdd, onEdit, onDelete, 
-  loading, searchTerm, onSearchChange 
+export default function AttributeTable({
+  title, data, onAdd, onEdit, onDelete, onRestore,
+  loading, searchTerm, onSearchChange
 }: AttributeTableProps) {
 
   return (
@@ -37,35 +37,83 @@ export default function AttributeTable({
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
-            <th className={styles.th} style={{ width: '150px', textAlign: 'center' }}>Mã ID</th>
+            <th className={styles.th} style={{ width: '120px', textAlign: 'center' }}>Mã ID</th>
             <th className={styles.th} style={{ textAlign: 'left' }}>Tên {title}</th>
+            {title === 'Thuộc tính' && (
+              <th className={styles.th} style={{ width: '160px', textAlign: 'center' }}>Đơn vị</th>
+            )}
             <th className={styles.th} style={{ width: '220px', textAlign: 'center' }}>Thao tác</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={3} className="text-center p-10">Đang tải dữ liệu...</td></tr>
+            <tr><td colSpan={title === 'Thuộc tính' ? 4 : 3} className="text-center p-10">Đang tải dữ liệu...</td></tr>
           ) : data && data.length > 0 ? (
-            data.map((item) => (
-              <tr key={item.id} className={styles.tr}>
-                <td className={styles.td} style={{ textAlign: 'center' }}>
-                  <span className={styles.idBadge}>#{item.id}</span>
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.nameText}>{item.name}</div>
-                </td>
-                <td className={styles.td}>
-                  <div className={styles.actionGroup}>
-                    <button className={`${styles.actionBtn} ${styles.btnEdit}`} onClick={() => onEdit(item)}>Sửa</button>
-                    <button className={`${styles.actionBtn} ${styles.btnDelete}`} onClick={() => onDelete(item.id)}>Xóa</button>
-                  </div>
-                </td>
-              </tr>
-            ))
+            data.map((item: any) => {
+              // Kiểm tra xem mục này đã bị xóa mềm chưa
+              const isDeleted = item.deletedAt !== null && item.deletedAt !== undefined;
+              const itemId = item.id || item.Id;
+
+              return (
+                <tr key={itemId} className={`${styles.tr} ${isDeleted ? styles.rowDeleted : ''}`}>
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
+                    <span className={styles.idBadge}>#{itemId}</span>
+                  </td>
+                  <td className={styles.td}>
+                    <div className={styles.nameWrapper}>
+                      {/* Tên chính */}
+                      <div className={styles.mainNameRow}>
+                        <span className={styles.nameText}>{item.name || item.Name}</span>
+                        {isDeleted && <span className={styles.deletedTag}>Đã xóa</span>}
+                      </div>
+                      
+                      {/* Hiển thị Parent Name nếu có, fallback về parentId nếu cần */}
+                      {(item.parentName || item.parent?.name || item.parentId) && (
+                        <div className={styles.parentText}>
+                          {item.parentName || item.parent?.name || `#${item.parentId}`}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  {title === 'Thuộc tính' && (
+                    <td className={`${styles.td} ${styles.unitCell}`}>
+                      {item.unit || item.Unit || '-'}
+                    </td>
+                  )}
+                  <td className={styles.td}>
+                    <div className={styles.actionGroup}>
+                      {!isDeleted ? (
+                        <>
+                          <button 
+                            className={`${styles.actionBtn} ${styles.btnEdit}`} 
+                            onClick={() => onEdit(item)}
+                          >
+                            Sửa
+                          </button>
+                          <button 
+                            className={`${styles.actionBtn} ${styles.btnDelete}`} 
+                            onClick={() => onDelete(itemId)}
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          className={`${styles.actionBtn} ${styles.btnRestore}`} 
+                          onClick={() => onRestore?.(itemId)}
+                        >
+                          Khôi phục
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan={3} className={styles.emptyCell}>
-                {searchTerm ? `Không tìm thấy kết quả nào` : `Trống! Chưa có dữ liệu ${title.toLowerCase()}`}
+              <td colSpan={title === 'Thuộc tính' ? 4 : 3} className={styles.emptyCell}>
+                {searchTerm ? `Không tìm thấy kết quả cho "${searchTerm}"` : `Chưa có dữ liệu ${title.toLowerCase()}`}
               </td>
             </tr>
           )}

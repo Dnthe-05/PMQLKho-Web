@@ -1,6 +1,6 @@
 .pageContainer {
     padding: 24px;
-    background-color: #f4f7f6; /* Màu nền nhẹ giúp nổi bật phần nội dung chính */
+    background-color: #f4f7f6;
     min-height: 100vh;
 }
 
@@ -13,16 +13,35 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: #595959;
-    transition: all 0.3s ease;
-    background-color: #fff;
+    color: white;
+    transition: all 0.5s ease;
+    background-color: #F23A3A;
     margin-bottom: 20px;
 }
 
 .backBtn:hover {
-    color: #1890ff;
-    border-color: #1890ff;
-    background-color: #e6f7ff;
+    color: white;
+    border-color: white;
+    background-color: #F23A3A;
+}
+
+.editBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid #1890ff;
+    border-radius: 8px;
+    background-color: #F23A3A;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.editBtn:hover {
+    background-color: #F23A3A;
+    border-color: white;
 }
 
 .pageTitle {
@@ -34,9 +53,73 @@
     padding-left: 15px;
 }
 
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #fff1f0;
+    color: #cf1322;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid #ffa39e;
+}
+
+.sku {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #595959;
+}
+
+.infoGrid {
+    display: grid;
+    gap: 12px 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fbfcfd;
+    border: 1px solid #e8eef5;
+}
+
+.infoLabel {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.infoItem span:last-child {
+    font-size: 15px;
+    color: #111827;
+    font-weight: 600;
+}
+
 .content {
     display: flex;
-    justify-content: center; /* Căn giữa cái bảng thông số kỹ thuật */
+    gap: 30px;
+    align-items: flex-start;
     animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -70,4 +153,164 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.rightSpec {
+    flex: 1;   /* Chiếm phần còn lại */
+    min-width: 0;
+}
+
+.specCard {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e8eef5;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    padding: 24px;
+}
+
+.specTitle {
+    margin: 0 0 18px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #102a43;
+}
+
+.rightSpec {
+    position: sticky; /* Kỹ thuật giúp bảng trượt dọc theo màn hình khi cuộn */
+    top: 24px;
+}
+
+/* Card trắng bọc thông tin bên trái */
+.productCard {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.imageBox {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.imageBox img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.mainDetails h3 {
+    font-size: 22px;
+    color: #1a3353;
+    margin-bottom: 12px;
+}
+
+.productDesc {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.priceTag {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.price {
+    color: #ff4d4f;
+}
+
+.leftInfo {
+    flex: 0 0 350px; 
+}
+
+.productCard {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+}
+
+/* THU NHỎ ẢNH Ở ĐÂY */
+.imageBox {
+    width: 100%;
+    height: 300px; /* Cố định chiều cao khung ảnh */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.imageBox img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Giữ nguyên tỉ lệ ảnh không bị méo */
+    transition: transform 0.3s ease;
+}
+
+.imageBox img:hover {
+    transform: scale(1.05); /* Hiệu ứng zoom nhẹ khi rê chuột */
+}
+
+/* CỘT PHẢI: Tự động giãn ra */
+.rightSpec {
+    flex: 1;
+    min-width: 0; /* Chống tràn layout */
+}
+
+.mainDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.specCard {
+    background: #ffffff;
+    border: 1px solid #e8eef5;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
+}
+
+.specTitle {
+    margin: 0 0 18px;
+    font-size: 20px;
+    color: #102a43;
+    font-weight: 700;
+}
+
+.specTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.specTable td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f3f7;
+    vertical-align: top;
+}
+
+.specTable tr:last-child td {
+    border-bottom: none;
+}
+
+.attrName {
+    width: 35%;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.attrValue {
+    color: #334155;
+    font-weight: 500;
 }

@@ -15,7 +15,6 @@ export interface PagedResponse<T> {
     totalPages: number;
 }
 
-// Cấu trúc ApiResponse bọc ngoài
 export interface ApiResponse<T> {
     success: boolean;
     statusCode: number;
@@ -29,9 +28,14 @@ export const getProducts = async (filters: any): Promise<any> => {
     return response;
 };
 
+export const getProductById = async (id: number): Promise<any> => {
+    const response = await axiosClient.get(`/api/product/${id}`);
+    return response.data; 
+};
+
 export const createProduct = async (data: any) => {
     const response = await axiosClient.post("/api/product", data);
-    return response;
+    return response.data;
 };
 
 export const updateProduct = async (id: number, data: any) => {
@@ -72,12 +76,12 @@ export const getProductBySerial = async (serialCode: string) => {
 };
 
 
-export const createAttribute = async (type: string, data: { name: string }) => {
+export const createAttribute = async (type: string, data: any) => {
     const response = await axiosClient.post(`/api/${type}`, data);
     return response.data; 
 };
 
-export const updateAttribute = async (type: string, id: number, data: { name: string }) => {
+export const updateAttribute = async (type: string, id: number, data: any) => {
     const response = await axiosClient.put(`/api/${type}/${id}`, data);
     return response.data;
 };
@@ -134,5 +138,15 @@ export const deleteUnit = async (type: string, id: number) => {
 };
 export const getProductAttributes = async (productId: number): Promise<ProductAttributeGroup> => {
     const response = await axiosClient.get(`/api/ProductAttribute/${productId}`);
+    return response.data;
+};
+
+export interface ProductAttributeUpdateDto {
+    attributeId: number;
+    value: string;
+}
+
+export const updateProductAttributes = async (productId: number, attributes: ProductAttributeUpdateDto[]) => {
+    const response = await axiosClient.put(`/api/ProductAttribute/${productId}`, attributes);
     return response.data;
 };

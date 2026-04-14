@@ -5,10 +5,22 @@ import {
   getCategories,
   getBrands,
   getUnits,
+  getAttributes,
+  getProductAttributes,
+  updateProductAttributes,
 } from "../../services/Product/productService";
 import ConfirmModal from "../ConfirmModal";
 import { type UpdateProductDto } from "../../types/Product/updateProductDto";
 import type { Product } from "../../types/Product/product";
+
+
+interface EditableAttribute {
+  attributeId: number;
+  name: string;
+  value: string;
+  unit?: string;
+  missingId?: boolean;
+}
 
 interface Props {
   isOpen: boolean;
@@ -28,6 +40,9 @@ export default function EditProductForm({
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
+  const [productAttributes, setProductAttributes] = useState<EditableAttribute[]>([]);
+  const [initialAttributeCount, setInitialAttributeCount] = useState<number>(0);
+  const [attributeDefinitions, setAttributeDefinitions] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<UpdateProductDto>({
     Name: "",
@@ -45,23 +60,60 @@ export default function EditProductForm({
   // 1. Lấy dữ liệu Dropdown
   useEffect(() => {
     const fetchSelectData = async () => {
+      if (!product) return;
       try {
-        const [catRes, brandRes, unitRes]: any = await Promise.all([
+        const [catRes, brandRes, unitRes, attributesRes, productAttrRes]: any = await Promise.all([
           getCategories(),
           getBrands(),
           getUnits(),
+          getAttributes(),
+          getProductAttributes(Number(product.id)),
         ]);
 
-        // Bóc tách kỹ để chắc chắn lấy được mảng
-        setCategories(catRes?.items || catRes?.data?.items || catRes || []);
-        setBrands(brandRes?.items || brandRes?.data?.items || brandRes || []);
-        setUnits(unitRes?.items || unitRes?.data?.items || unitRes || []);
+        const categoriesArr = catRes?.items || catRes?.data?.items || catRes || [];
+        setCategories(categoriesArr);
+        const brandsArr = brandRes?.items || brandRes?.data?.items || brandRes || [];
+        setBrands(brandsArr);
+        const unitsArr = unitRes?.items || unitRes?.data?.items || unitRes || [];
+        setUnits(unitsArr);
+
+        const attrDefs = attributesRes?.items || attributesRes?.data?.items || attributesRes || [];
+        setAttributeDefinitions(attrDefs);
+
+        const productAttrList: any[] =
+          productAttrRes?.attributes ||
+          productAttrRes?.data?.attributes ||
+          productAttrRes || [];
+
+        const mappedAttrs = (productAttrList || []).map((item: any) => {
+          const matched = attrDefs.find(
+            (def: any) =>
+              Number(def.id) === Number(item.attributeId) ||
+              def.name?.trim().toLowerCase() === item.name?.trim().toLowerCase()
+          );
+          return {
+            attributeId: matched?.id || 0,
+            name: item.name || "",
+            value: item.value || "",
+            unit: matched?.unit || item.unit || "",
+            missingId: !matched,
+          };
+        });
+
+        setInitialAttributeCount(
+          mappedAttrs.filter((attr) => attr.attributeId > 0 && attr.value.trim()).length
+        );
+        setProductAttributes(
+          mappedAttrs.length > 0
+            ? mappedAttrs
+            : [{ attributeId: 0, name: "", value: "", unit: "", missingId: false }]
+        );
       } catch (error) {
         console.error("Lỗi lấy danh sách dropdown:", error);
       }
     };
     if (isOpen) fetchSelectData();
-  }, [isOpen]);
+  }, [isOpen, product]);
 
   useEffect(() => {
     const isDataReady =
@@ -88,7 +140,41 @@ export default function EditProductForm({
     }
   }, [product, isOpen, categories, brands, units]);
 
+  
+
   if (!isOpen || !product) return null;
+
+  const handleAttributeSelect = (index: number, attributeId: number) => {
+    setProductAttributes((prev) =>
+      prev.map((attr, idx) => {
+        if (idx !== index) return attr;
+        const selected = attributeDefinitions.find((def) => Number(def.id) === Number(attributeId));
+        return {
+          ...attr,
+          attributeId: Number(attributeId),
+          name: selected?.name || "",
+          unit: selected?.unit || "",
+          missingId: !selected,
+        };
+      })
+    );
+  };
+
+  const handleAttributeValueChange = (index: number, value: string) => {
+    setProductAttributes((prev) =>
+      prev.map((attr, idx) =>
+        idx === index ? { ...attr, value } : attr
+      )
+    );
+  };
+
+  const addAttributeRow = () => {
+    setProductAttributes((prev) => [...prev, { attributeId: 0, name: "", value: "", unit: "", missingId: false }]);
+  };
+
+  const removeAttributeRow = (index: number) => {
+    setProductAttributes((prev) => prev.filter((_, idx) => idx !== index));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +186,17 @@ export default function EditProductForm({
       alert("Vui lòng chọn đầy đủ thông tin");
       return;
     }
+
+    const invalidRows = productAttributes.filter(
+      (attr) =>
+        (!attr.attributeId && attr.value.trim()) ||
+        (attr.attributeId > 0 && !attr.value.trim())
+    );
+    if (invalidRows.length > 0) {
+      alert("Vui lòng chọn tên thuộc tính và nhập giá trị cho tất cả các hàng.");
+      return;
+    }
+
     setShowConfirm(true);
   };
 
@@ -107,6 +204,21 @@ export default function EditProductForm({
     setShowConfirm(false);
     try {
       await updateProduct(Number(product.id), formData);
+
+      const attributeUpdates = productAttributes
+        .filter((attr) => attr.attributeId > 0 && attr.value.trim())
+        .map((attr) => ({
+          attributeId: Number(attr.attributeId),
+          value: attr.value.trim(),
+        }));
+
+      const shouldUpdateAttributes =
+        attributeUpdates.length > 0 || initialAttributeCount > 0;
+
+      if (shouldUpdateAttributes) {
+        await updateProductAttributes(Number(product.id), attributeUpdates);
+      }
+
       alert("Cập nhật thành công!");
       onSuccess();
       onClose();
@@ -283,6 +395,48 @@ export default function EditProductForm({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className={styles.attributesSection}>
+            <div className={styles.attributesHeader}>
+              <h3 className={styles.attributesTitle}>Thông số sản phẩm</h3>
+              <button type="button" className={styles.btnAddAttribute} onClick={addAttributeRow}>
+                + Thêm thuộc tính
+              </button>
+            </div>
+            {productAttributes.map((attr, index) => (
+              <div key={index} className={styles.attributeRow}>
+                <div className={styles.formGroup}>
+                  <label>Thuộc tính</label>
+                  <select
+                    value={attr.attributeId || ''}
+                    onChange={(e) => handleAttributeSelect(index, Number(e.target.value))}
+                  >
+                    <option value="">-- Chọn thuộc tính --</option>
+                    {attributeDefinitions.map((def) => (
+                      <option key={def.id} value={def.id}>
+                        {def.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Giá trị</label>
+                  <input
+                    type="text"
+                    value={attr.value}
+                    onChange={(e) => handleAttributeValueChange(index, e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Đơn vị</label>
+                  <input type="text" value={attr.unit || ''} readOnly />
+                </div>
+                <button type="button" className={styles.btnRemoveAttribute} onClick={() => removeAttributeRow(index)}>
+                  Xóa
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className={styles.formActions}>

@@ -18,6 +18,7 @@ type TabType = 'category' | 'brand' | 'unit' | 'attribute';
 export default function ProductSetting() {
   const [activeTab, setActiveTab] = useState<TabType>('category');
   const [listData, setListData] = useState<BaseAttribute[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -65,6 +66,39 @@ const fetchData = useCallback(async () => {
     setCurrentPage(1);
   }, [activeTab, searchTerm]);
 
+  useEffect(() => {
+    const loadCategoryOptions = async () => {
+      if (activeTab !== 'category') return;
+
+      try {
+        const allItems: any[] = [];
+        let pageNumber = 1;
+        const pageSizeForList = 50;
+
+        while (true) {
+          const response: any = await getCategories({ pageNumber, pageSize: pageSizeForList });
+          const pagedData = response.data || response;
+          const items = pagedData?.items || pagedData?.Items || response.items || response || [];
+          const nextItems = Array.isArray(items) ? items : [];
+          allItems.push(...nextItems);
+
+          const totalCount = pagedData?.totalCount || pagedData?.TotalCount;
+          if (!nextItems.length) break;
+          if (totalCount && allItems.length >= totalCount) break;
+
+          pageNumber += 1;
+          if (pageNumber > 20) break;
+        }
+
+        setCategoryOptions(allItems);
+      } catch (error) {
+        console.error('Không thể tải danh mục cha:', error);
+      }
+    };
+
+    loadCategoryOptions();
+  }, [activeTab]);
+
   const getTabLabel = () => {
     switch (activeTab) {
       case 'category': return 'Danh mục';
@@ -75,42 +109,52 @@ const fetchData = useCallback(async () => {
     }
   };
 
-  const handleSave = async (name: string) => {
+    const handleSave = async (payload: { name: string; parentId?: number | null; unit?: string }) => {
     try {
-      let res;
-      if (selectedItem) {
-        // Nếu có selectedItem là đang Sửa
-        const id = selectedItem.id || selectedItem.Id;
-        res = await updateAttribute(activeTab, id, { name });
-      } else {
-        // Không có là Thêm mới
-        res = await createAttribute(activeTab, { name });
+      const data: any = { name: payload.name };
+      if (activeTab === 'category') {
+        data.parentId = payload.parentId ?? null;
+      }
+      if (activeTab === 'attribute') {
+        data.unit = payload.unit || '';
       }
 
-      if (res.success) {
+      const itemId = selectedItem?.id || selectedItem?.Id;
+      const res = selectedItem
+        ? await updateAttribute(activeTab, itemId, data)
+        : await createAttribute(activeTab, data);
+
+      if (res) {
         setIsModalOpen(false);
-        fetchData(); // Cập nhật lại bảng ngay lập tức
+        setSelectedItem(null);
+        await fetchData();
+        alert(selectedItem ? "Đã sửa thành công!" : "Đã tạo thành công!");
       } else {
-        alert(res.message || "Có lỗi xảy ra");
+        alert("Có lỗi từ phía máy chủ!");
       }
     } catch (error) {
-      console.error("Lỗi khi lưu:", error);
+      alert("Không thể kết nối tới server!");
     }
   };
+
+  const handleEdit = async (item: any) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedItem(null);
+    setIsModalOpen(true);
+  };
   const handleDelete = async (id: number) => {
-        const confirmDelete = window.confirm("Sư phụ hỏi lại: Con có chắc muốn xóa mục này không?");
+        const confirmDelete = window.confirm("Bạn có muốn xóa không?");
         if (!confirmDelete) return;
 
         try {
-            // activeTab chính là 'category', 'brand', 'unit', hoặc 'attribute'
-            const res = await deleteAttribute(activeTab, id);
-            
-            if (res.success) {
-                alert("Xóa thành công rồi đệ tử!");
-                fetchData(); // Gọi lại hàm load dữ liệu để bảng cập nhật mới
-            } else {
-                alert(res.message || "Xóa thất bại rồi!");
-            }
+            const res = await deleteAttribute(activeTab, id);            
+            alert("Xóa thành công!");
+            setIsModalOpen(false);
+            await fetchData(); 
         } catch (error) {
             console.error("Lỗi xóa:", error);
             alert("Lỗi hệ thống, kiểm tra lại Backend nhé!");
@@ -143,24 +187,29 @@ const fetchData = useCallback(async () => {
           loading={loading}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          onAdd={() => {
-          setSelectedItem(null); // Thêm mới thì item là null
-          setIsModalOpen(true);
-        }}
-          onEdit={(item) => {
-          setSelectedItem(item); // Sửa thì gán item vào
-          setIsModalOpen(true);
-        }}
+          onAdd={handleAdd}
+          onEdit={handleEdit}
           onDelete={handleDelete}
         />
         <AttributeModal 
-        isOpen={isModalOpen}
-        title={getTabLabel()}
-        initialData={selectedItem ? { name: selectedItem.name || selectedItem.Name } : null}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        
-      />
+          isOpen={isModalOpen}
+          title={getTabLabel()}
+          initialData={selectedItem ? {
+            name: selectedItem.name || selectedItem.Name,
+            parentId: selectedItem.parentId ?? selectedItem.ParentId ?? null,
+            parentName: selectedItem.parentName || selectedItem.ParentName || selectedItem.parent?.name || '',
+            unit: selectedItem.unit ?? selectedItem.Unit ?? '',
+          } : null}
+          parentOptions={
+            activeTab === 'category'
+              ? categoryOptions
+                  .filter((item: any) => (item.id || item.Id) !== (selectedItem?.id || selectedItem?.Id))
+                  .map((item: any) => ({ id: item.id || item.Id, name: item.name || item.Name }))
+              : []
+          }
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
+        />
         
         {totalItems > 0 && (
           <div className="p-4 border-t border-gray-100 flex justify-center bg-white">

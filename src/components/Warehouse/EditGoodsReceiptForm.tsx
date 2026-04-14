@@ -45,10 +45,13 @@ export default function EditGoodsReceiptForm({
 
   useEffect(() => {
     if (isOpen) {
-      getProducts({}).then((res) => {
-        const data = res.items || res.data || res;
-        setProductList(Array.isArray(data) ? data : []);
-      });
+      getProducts({ PageSize: 1000 })
+        .then((res: any) => {
+          const data =
+            res.items || res.data?.items || res.data?.data || res.data || res;
+          setProductList(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => console.error("Lỗi tải danh sách sản phẩm:", err));
     }
   }, [isOpen]);
 
@@ -458,12 +461,15 @@ export default function EditGoodsReceiptForm({
                     <div
                       style={{
                         position: "absolute",
-                        zIndex: 100,
+                        top: "calc(100% + 5px)", // Đẩy xuống dưới input 5px để không bị dính
+                        left: 0,
+                        zIndex: 1000, // Đảm bảo nổi lên trên cùng
                         width: "100%",
                         background: "#fff",
                         border: "1px solid #ddd",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        maxHeight: "150px",
+                        borderRadius: "6px", // Bo góc cho đồng bộ
+                        boxShadow: "0 10px 25px rgba(0,0,0,0.15)", // Đổ bóng đậm hơn để phân biệt với nền
+                        maxHeight: "200px",
                         overflowY: "auto",
                       }}
                     >
@@ -477,16 +483,44 @@ export default function EditGoodsReceiptForm({
                           <div
                             key={p.id}
                             onClick={() => handleSelectProduct(p)}
+                            className={styles.dropdownItem} // Sử dụng class CSS nếu có hoặc inline style bên dưới
                             style={{
-                              padding: "10px",
+                              padding: "10px 15px",
                               cursor: "pointer",
-                              borderBottom: "1px solid #eee",
+                              borderBottom: "1px solid #f0f0f0",
                               fontSize: "13px",
+                              transition: "background 0.2s",
                             }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = "#fff5f5")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "#fff")
+                            }
                           >
-                            <strong>{p.sku}</strong> - {p.name}
+                            <strong style={{ color: "#F23A3A" }}>
+                              {p.sku}
+                            </strong>{" "}
+                            - {p.name}
                           </div>
                         ))}
+                      {/* Trường hợp không tìm thấy */}
+                      {productList.filter((p) =>
+                        (p.name + p.sku)
+                          .toLowerCase()
+                          .includes(searchTerm.toLowerCase()),
+                      ).length === 0 && (
+                        <div
+                          style={{
+                            padding: "15px",
+                            textAlign: "center",
+                            color: "#999",
+                            fontSize: "13px",
+                          }}
+                        >
+                          Không tìm thấy sản phẩm nào
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

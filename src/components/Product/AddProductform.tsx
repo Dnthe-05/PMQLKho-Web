@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/Product/AddProductForm.module.css'; 
-import { createProduct, getCategories, getBrands, getUnits } from '../../services/Product/productService';
+import { createProduct, getCategories, getBrands, getUnits, getAttributes, updateProductAttributes } from '../../services/Product/productService';
 
 interface Props {
   isOpen: boolean;
@@ -8,10 +8,24 @@ interface Props {
   onSuccess: () => void;
 }
 
+interface AttributeRow {
+  attributeId: string | number;
+  value: string;
+  unit: string;
+}
+
+const emptyAttributeRow = (): AttributeRow => ({ attributeId: '', value: '', unit: '' });
+
+const extractItems = (result: any) => {
+  return result?.data?.data?.items || result?.data?.items || result?.items || result?.data || result || [];
+};
+
 export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
+  const [attributeOptions, setAttributeOptions] = useState<any[]>([]);
+  const [attributeRows, setAttributeRows] = useState<AttributeRow[]>([emptyAttributeRow()]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -31,14 +45,17 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
     if (isOpen) {
       const loadData = async () => {
         try {
-          const [c, b, u]: any = await Promise.all([
+          const [c, b, u, attrRes]: any = await Promise.all([
             getCategories(), 
             getBrands(), 
-            getUnits()
+            getUnits(),
+            getAttributes(),
           ]);
-          setCategories(c.data || c);
-          setBrands(b.data || b);
-          setUnits(u.data || u);
+          setCategories(extractItems(c));
+          setBrands(extractItems(b));
+          setUnits(extractItems(u));
+          setAttributeOptions(extractItems(attrRes));
+          setAttributeRows([emptyAttributeRow()]);
         } catch (err) {
           console.error("Lỗi load dữ liệu:", err);
         }
@@ -56,6 +73,28 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
 
   const parseNumber = (value: string) => {
     return Number(value.replace(/\./g, ""));
+  };
+
+  const handleAttributeChange = (index: number, field: keyof AttributeRow, value: string) => {
+    setAttributeRows((prev) =>
+      prev.map((row, idx) => {
+        if (idx !== index) return row;
+        const nextRow = { ...row, [field]: value };
+        if (field === 'attributeId') {
+          const selected = attributeOptions.find((item) => Number(item.id) === Number(value));
+          nextRow.unit = selected?.unit || '';
+        }
+        return nextRow;
+      })
+    );
+  };
+
+  const addAttributeRow = () => {
+    setAttributeRows((prev) => [...prev, emptyAttributeRow()]);
+  };
+
+  const removeAttributeRow = (index: number) => {
+    setAttributeRows((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,21 +119,36 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
       };
 
       const res: any = await createProduct(finalData);
-      
-      if (res) {
-        alert("Thêm sản phẩm thành công!");
-        onSuccess();
-        onClose();
-        setFormData({ 
-          Sku: '', Name: '', Location: '', 
-          ImportPrice: 0, ExportPrice: 0, StockQuantity: 0, 
-          CategoryId: '', BrandId: '', UnitId: '', Image: '' 
-        });
+      const productId = Number(res?.id || res?.data?.id || res?.product?.id);
+
+      if (!productId) {
+        throw new Error('Không lấy được ID sản phẩm sau khi tạo');
       }
+
+      const attributePayload = attributeRows
+        .filter((row) => row.attributeId && row.value.trim())
+        .map((row) => ({
+          attributeId: Number(row.attributeId),
+          value: row.value.trim(),
+        }));
+
+      if (attributePayload.length > 0) {
+        await updateProductAttributes(productId, attributePayload);
+      }
+
+      alert('Thêm sản phẩm thành công!');
+      onSuccess();
+      onClose();
+      setFormData({ 
+        Sku: '', Name: '', Location: '', 
+        ImportPrice: 0, ExportPrice: 0, StockQuantity: 0, 
+        CategoryId: '', BrandId: '', UnitId: '', Image: '' 
+      });
+      setAttributeRows([emptyAttributeRow()]);
     } catch (error: any) {
       const serverData = error.response?.data;
       if (serverData?.errors) setFieldErrors(serverData.errors);
-      else alert("Lỗi: " + (serverData?.message || "Không thể lưu sản phẩm"));
+      else alert('Lỗi: ' + (serverData?.message || 'Không thể lưu sản phẩm'));
     }
   };
 
@@ -234,6 +288,54 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
                 {formData.Image?.trim() ? "Xem trước ảnh từ Link" : "Sẽ dùng logo mặc định nếu để trống"}
               </span>
             </div>
+          </div>
+
+          <div className={styles.attributesSection}>
+            <div className={styles.attributesHeader}>
+              <h3>Thuộc tính thêm</h3>
+              <button type="button" className={styles.btnAddAttribute} onClick={addAttributeRow}>
+                + Thêm thuộc tính
+              </button>
+            </div>
+            {attributeRows.map((row, index) => (
+              <div key={index} className={styles.attributeRow}>
+                <div className={styles.formGroup}>
+                  <label>Tên thuộc tính</label>
+                  <select
+                    value={row.attributeId}
+                    onChange={(e) => handleAttributeChange(index, 'attributeId', e.target.value)}
+                  >
+                    <option value="">-- Chọn thuộc tính --</option>
+                    {attributeOptions.map((attr: any) => (
+                      <option key={attr.id} value={attr.id}>
+                        {attr.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Giá trị</label>
+                  <input
+                    type="text"
+                    value={row.value}
+                    onChange={(e) => handleAttributeChange(index, 'value', e.target.value)}
+                    placeholder="Nhập giá trị..."
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Đơn vị</label>
+                  <input
+                    type="text"
+                    value={row.unit}
+                    onChange={(e) => handleAttributeChange(index, 'unit', e.target.value)}
+                    placeholder="Ví dụ: cm, kg..."
+                  />
+                </div>
+                <button type="button" className={styles.btnRemoveAttribute} onClick={() => removeAttributeRow(index)}>
+                  Xóa
+                </button>
+              </div>
+            ))}
           </div>
 
           <div className={styles.formActions}>
