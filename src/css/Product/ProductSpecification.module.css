@@ -1,0 +1,82 @@
+.container {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.header {
+  background: linear-gradient(90deg, #1890ff, #096dd9);
+  padding: 20px 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.productName {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+.specTable {
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.row:nth-child(even) {
+  background: #f8fbff;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background: #e8f3ff;
+}
+
+.label {
+  flex: 0 0 180px;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.value {
+  flex: 1;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.unit {
+  color: #0f63ff;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.noData {
+  padding: 32px;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background: #fafafa;
+}

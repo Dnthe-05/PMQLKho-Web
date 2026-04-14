@@ -16,16 +16,16 @@ const ProductSidebar: React.FC<ProductSidebarProps> = ({ filters, onFilterChange
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [catData, brandData, unitData]: any = await Promise.all([
+        const [catRes, brandRes, unitRes]: any = await Promise.all([
           getCategories(),
           getBrands(),
           getUnits()
         ]);
         
-        // Bóc tách data từ ApiResponse của con
-        setCategories(catData.data || catData || []);
-        setBrands(brandData.data || brandData || []);
-        setUnits(unitData.data || unitData || []);
+        setCategories(catRes?.items || catRes?.data?.items || catRes || []);
+        setBrands(brandRes?.items || brandRes?.data?.items || brandRes || []);
+        setUnits(unitRes?.items || unitRes?.data?.items || unitRes || []);
+        
       } catch (error) {
         console.error("Lỗi lấy dữ liệu gợi ý:", error);
       }

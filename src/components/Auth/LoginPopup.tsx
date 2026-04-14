@@ -47,7 +47,7 @@ export default function LoginPage() {
           </div>
           <div className={styles.inputGroup}>
             <label>Mật khẩu</label>
-            <input 
+            <input
               type="password" 
               placeholder="Nhập mật khẩu"
               value={password} 

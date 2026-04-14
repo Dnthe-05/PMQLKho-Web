@@ -34,7 +34,6 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     <header className={styles.topHeader}>
       <Logo />
       <div className={styles.headerRight}>
-        <span className={styles.bellIcon} style={{ cursor: 'pointer', fontSize: '20px' }}>🔔</span>
         
         <div 
           className={styles.userContainer} 
@@ -63,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
               <div 
                 onClick={handleLogout}
                 style={{
-                  padding: '10px 20px',
+                  padding: '5px 10px',
                   color: '#d32f2f',
                   fontWeight: '600',
                   fontSize: '14px',
