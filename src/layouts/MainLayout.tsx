@@ -43,9 +43,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, user }) => {
           </div>
 
           <div className={styles.dropdown}>
-            <div className={styles.navItemLabel}>
+            <NavLink
+              to="/kho-hang"
+              className={({ isActive }) =>
+                isActive ? styles.navItemActive : styles.navItem
+              }
+            >
               Kho hàng <span className={styles.arrow}>▾</span>
-            </div>
+            </NavLink>
 
             <div className={styles.dropdownContent}>
               <NavLink to="/nhap-kho" className={styles.dropdownItem}>

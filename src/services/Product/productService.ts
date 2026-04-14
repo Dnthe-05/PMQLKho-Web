@@ -1,12 +1,12 @@
 import axiosClient from '../../API/axiosClient';
+import { type ProductAttributeGroup } from '../../types/ProductAttribute/productAttribute';
+
 export interface BaseAttribute {
     id: number;
     name: string;
 }
 
-// Thêm vào productService.ts
 
-// Cấu trúc PagedResponse khớp với Backend
 export interface PagedResponse<T> {
     items: T[];
     totalCount: number;
@@ -131,4 +131,8 @@ export const deleteUnit = async (type: string, id: number) => {
     const response = await axiosClient.delete(`/api/${type}/${id}`);
     return response.data;
 
+};
+export const getProductAttributes = async (productId: number): Promise<ProductAttributeGroup> => {
+    const response = await axiosClient.get(`/api/ProductAttribute/${productId}`);
+    return response.data;
 };

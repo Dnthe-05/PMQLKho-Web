@@ -1,6 +1,7 @@
 import React from 'react';
 import { type Product } from '../../types/Product/product';
 import styles from '../../css/Product/ProductTable.module.css';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductTableProps {
   data: Product[];
@@ -13,7 +14,7 @@ interface ProductTableProps {
 
 const ProductTable: React.FC<ProductTableProps> = ({ data, loading, onEdit, onDelete, onRestore }) => {
   const safeData = data || [];
-
+  const navigate = useNavigate();
   if (loading) return <div className="text-center p-5">Đang tải dữ liệu...</div>;
 
   return (
@@ -48,19 +49,29 @@ const ProductTable: React.FC<ProductTableProps> = ({ data, loading, onEdit, onDe
                     alt="product" 
                   />
                 </td>
-
-                {/* Cột Tên & SKU - Gạch ngang nếu đã xóa */}
+                
+                {/* trung */}
                 <td className={styles.td}>
-                  <div style={{ 
-                    fontWeight: 600, 
-                    color: isItemDeleted ? '#bfbfbf' : '#262626',
-                    textDecoration: isItemDeleted ? 'line-through' : 'none' 
-                  }}>
+                  <div 
+                    style={{ 
+                      fontWeight: 600, 
+                      color: isItemDeleted ? '#bfbfbf' : '#1890ff', 
+                      textDecoration: isItemDeleted ? 'line-through' : 'none',
+                      cursor: isItemDeleted ? 'default' : 'pointer' 
+                    }}
+                  
+                     onClick={(e) => { e.stopPropagation(); !isItemDeleted && navigate(`/product/detail/${item.id}`); }}
+                  >
                     {item.name}
                     {isItemDeleted && <span className={styles.deleteBadge}>Đã xóa</span>}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{item.sku}</div>
+
+                  {/* SKU thì để màu xám bình thường, không cần nổi bật */}
+                  <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
+                    {item.sku}
+                  </div>
                 </td>
+                {/* trung */}
 
                 {/* Cột Danh mục & Nhãn hàng */}
                 <td className={styles.td} style={{ textAlign: 'center', color: isItemDeleted ? '#bfbfbf' : 'inherit' }}>

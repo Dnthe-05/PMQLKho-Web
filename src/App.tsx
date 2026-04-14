@@ -19,6 +19,7 @@ import GoodsReceiptPage from "./components/Warehouse/GoodsReceiptPage";
 import GoodsReceiptDetailPage from "./components/Warehouse/GoodsReceiptPageDetail";
 import GoodsIssuePage from "./components/Warehouse/GoodsIssuePage";
 import GoodsIssueDetailPage from "./components/Warehouse/GoodsIssueDetailPage";
+import ProductDetailPage from "./components/Product/ProductDetailPage";
 const HomePage = () => (
   <div style={{ padding: "20px", textAlign: "center" }}>
     <h2>Chào mừng đến với hệ thống CAG PRO</h2>
@@ -104,6 +105,15 @@ const App = () => {
             )
           }
         />
+        <Route path="/product/detail/:id" element={
+      user ? (
+        <MainLayout user={user}>
+          <ProductDetailPage />
+        </MainLayout>
+      ) : (
+        <Navigate to="/login" replace />
+      )
+    } />
         <Route
           path="/nhap-kho"
           element={

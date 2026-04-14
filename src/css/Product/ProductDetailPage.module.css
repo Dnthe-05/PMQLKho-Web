@@ -1,0 +1,73 @@
+.pageContainer {
+    padding: 24px;
+    background-color: #f4f7f6; /* Màu nền nhẹ giúp nổi bật phần nội dung chính */
+    min-height: 100vh;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: 1px solid #d9d9d9;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #595959;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    margin-bottom: 20px;
+}
+
+.backBtn:hover {
+    color: #1890ff;
+    border-color: #1890ff;
+    background-color: #e6f7ff;
+}
+
+.pageTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a3353;
+    margin-bottom: 24px;
+    border-left: 5px solid #1890ff;
+    padding-left: 15px;
+}
+
+.content {
+    display: flex;
+    justify-content: center; /* Căn giữa cái bảng thông số kỹ thuật */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Các trạng thái phản hồi người dùng */
+.loading, .error, .noData {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    font-size: 16px;
+    color: #8c8c8c;
+    background: #fff;
+    border-radius: 8px;
+    margin: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.error {
+    color: #ff4d4f;
+    border: 1px solid #ffccc7;
+    background-color: #fff2f0;
+}
+
+/* Hiệu ứng xuất hiện mượt mà */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

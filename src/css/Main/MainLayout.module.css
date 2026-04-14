@@ -159,13 +159,7 @@
   width: 100%;
   height: 10px; /* Tạo cầu nối 10px để rê chuột mượt hơn */
 }
-/*thương thêm*/
-/* Container bọc các link */
-.navLinks {
-  display: flex;
-  align-items: stretch; /* Ép tất cả các con cao bằng cha (navBar) */
-  height: 100%;
-}
+
 
 /* Mục Kho hàng */
 .dropdown {
