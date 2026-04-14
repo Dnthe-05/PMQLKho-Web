@@ -22,9 +22,9 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, on
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
-            <th className={styles.th} style={{ width: '60px', textAlign: 'center' }}>STT</th>
-            <th className={styles.th}>Thông tin khách hàng</th>
-            <th className={styles.th}>Địa chỉ giao hàng</th>
+            <th className={styles.th} style={{ width: '10px', textAlign: 'center' }}>STT</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Thông tin khách hàng</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Địa chỉ giao hàng</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Trạng thái</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Hoạt động</th>
           </tr>
@@ -49,7 +49,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, on
                   </td>
 
                   {/* Thông tin khách hàng*/}
-                  <td className={styles.td}>
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div style={{ 
                       fontWeight: 600, 
                       color: isDeleted ? '#bfbfbf' : '#262626',
@@ -64,7 +64,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, on
                   </td>
 
                   {/* Địa chỉ giao hàng */}
-                  <td className={styles.td}>
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div style={{ color: isDeleted ? '#bfbfbf' : '#595959', fontSize: '14px' }}>
                       {item.shippingAddress || <span style={{ color: '#bfbfbf', fontStyle: 'italic' }}>Chưa cập nhật</span>}
                     </div>

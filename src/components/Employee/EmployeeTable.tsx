@@ -33,9 +33,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
         <thead className={styles.thead}>
           <tr>
 
-            <th className={styles.th} style={{ width: '60px', textAlign: 'center' }}>STT</th>
-            <th className={styles.th}>Tài khoản (Username)</th>
-            <th className={styles.th}>Họ và tên</th>
+            <th className={styles.th} style={{ width: '10px', textAlign: 'center' }}>STT</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Tài khoản (Username)</th>
+            <th className={styles.th} style={{ textAlign: 'center' }}>Họ và tên</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Vai trò</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Trạng thái</th>
             <th className={styles.th} style={{ textAlign: 'center' }}>Hoạt động</th>
@@ -61,7 +61,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                   </td>
 
                   {/* Tài khoản */}
-                  <td className={styles.td}>
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div style={{ 
                       fontWeight: 600, 
                       color: isDeleted ? '#bfbfbf' : '#262626',
@@ -73,7 +73,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                   </td>
 
                   {/* Họ và tên */}
-                  <td className={styles.td}>
+                  <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div style={{ color: isDeleted ? '#bfbfbf' : '#595959' }}>{item.fullName}</div>
                   </td>
 
