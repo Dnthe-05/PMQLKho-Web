@@ -1,27 +1,25 @@
-import React, { useState } from 'react';
 import styles from '../../css/Product/AttributeTable.module.css';
 import { type BaseAttribute } from '../../services/Product/productService';
 
 interface AttributeTableProps {
-  title: string; // Truyền vào "Danh mục", "Thương hiệu",...
+  title: string;
   data: BaseAttribute[];
   onAdd: () => void;
   onEdit: (item: BaseAttribute) => void;
   onDelete: (id: number) => void;
+  loading?: boolean;     
+  searchTerm?: string;    
+  onSearchChange?: (term: string) => void; 
 }
 
-export default function AttributeTable({ title, data, onAdd, onEdit, onDelete }: AttributeTableProps) {
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Bộ lọc tìm kiếm
-  const filteredData = data.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.id.toString().includes(searchTerm)
-  );
+export default function AttributeTable({ 
+  title, data, onAdd, onEdit, onDelete, 
+  loading, searchTerm, onSearchChange 
+}: AttributeTableProps) {
 
   return (
-    <div className={styles.tableContainer}>
-      {/* Header chứa Search và Button Thêm */}
+    <div className={`${styles.tableContainer} ${loading ? 'opacity-50' : ''}`}>
       <div className={styles.tableHeader}>
         <div className={styles.searchBox}>
           <span className={styles.searchIcon}>🔍</span>
@@ -29,20 +27,13 @@ export default function AttributeTable({ title, data, onAdd, onEdit, onDelete }:
             type="text"
             placeholder={`Tìm kiếm ${title.toLowerCase()}...`}
             className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm || ''}
+            onChange={(e) => onSearchChange?.(e.target.value)}
           />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className={styles.clearBtn}>✕</button>
-          )}
         </div>
-
-        <button onClick={onAdd} className={styles.btnAddMain}>
-          + Thêm {title} mới
-        </button>
+        <button onClick={onAdd} className={styles.btnAddMain}>+ Thêm {title} mới</button>
       </div>
 
-      {/* Bảng hiển thị */}
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
@@ -52,8 +43,10 @@ export default function AttributeTable({ title, data, onAdd, onEdit, onDelete }:
           </tr>
         </thead>
         <tbody>
-          {filteredData.length > 0 ? (
-            filteredData.map((item) => (
+          {loading ? (
+            <tr><td colSpan={3} className="text-center p-10">Đang tải dữ liệu...</td></tr>
+          ) : data && data.length > 0 ? (
+            data.map((item) => (
               <tr key={item.id} className={styles.tr}>
                 <td className={styles.td} style={{ textAlign: 'center' }}>
                   <span className={styles.idBadge}>#{item.id}</span>
@@ -63,18 +56,8 @@ export default function AttributeTable({ title, data, onAdd, onEdit, onDelete }:
                 </td>
                 <td className={styles.td}>
                   <div className={styles.actionGroup}>
-                    <button 
-                      className={`${styles.actionBtn} ${styles.btnEdit}`} 
-                      onClick={() => onEdit(item)}
-                    >
-                      Sửa
-                    </button>
-                    <button 
-                      className={`${styles.actionBtn} ${styles.btnDelete}`} 
-                      onClick={() => onDelete(item.id)}
-                    >
-                      Xóa
-                    </button>
+                    <button className={`${styles.actionBtn} ${styles.btnEdit}`} onClick={() => onEdit(item)}>Sửa</button>
+                    <button className={`${styles.actionBtn} ${styles.btnDelete}`} onClick={() => onDelete(item.id)}>Xóa</button>
                   </div>
                 </td>
               </tr>
@@ -82,9 +65,7 @@ export default function AttributeTable({ title, data, onAdd, onEdit, onDelete }:
           ) : (
             <tr>
               <td colSpan={3} className={styles.emptyCell}>
-                {searchTerm 
-                  ? `Không tìm thấy ${title.toLowerCase()} nào khớp với "${searchTerm}"` 
-                  : `Trống! Chưa có dữ liệu ${title.toLowerCase()}`}
+                {searchTerm ? `Không tìm thấy kết quả nào` : `Trống! Chưa có dữ liệu ${title.toLowerCase()}`}
               </td>
             </tr>
           )}
