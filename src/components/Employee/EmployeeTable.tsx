@@ -99,12 +99,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                   {/* Hoạt động */}
                   <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div className="flex justify-center gap-2">
+                      {!isDeleted && (
                       <button 
                         className={styles.actionBtn} 
                         onClick={() => onEdit(item)}
                       >
                         Sửa
                       </button>
+                      )}
 
                       {!isDeleted && (
                         <button 

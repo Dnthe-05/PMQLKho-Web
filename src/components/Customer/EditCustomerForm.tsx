@@ -47,9 +47,17 @@ export default function EditCustomerForm({ isOpen, onClose, onSuccess, customer 
     
     if (Object.keys(newErrors).length === 0) {
         alert(message);
-    } else {
-        setFieldErrors(newErrors);
     }
+    
+    setFieldErrors(newErrors);
+  };
+
+  const serverErrorToField = (errors: any) => {
+    const result: Record<string, string> = {};
+    for (const key in errors) {
+      result[key] = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+    }
+    return result;
   };
 
   const handleSubmit = () => {
@@ -85,13 +93,17 @@ export default function EditCustomerForm({ isOpen, onClose, onSuccess, customer 
         mapErrorToFields(res.message);
       }
     } catch (error: any) {
+      console.error("Lỗi cập nhật khách hàng:", error);
       const serverData = error.response?.data;
-      if (serverData?.errors) {
-        setFieldErrors(serverData.errors);
-      } else if (serverData?.message) {
-        mapErrorToFields(serverData.message);
+      
+      if (serverData) {
+        if (serverData.errors) {
+          setFieldErrors(serverErrorToField(serverData.errors));
+        } else if (serverData.message) {
+          mapErrorToFields(serverData.message);
+        }
       } else {
-        alert("Có lỗi xảy ra khi cập nhật khách hàng!");
+        alert("Có lỗi xảy ra khi cập nhật khách hàng. Vui lòng kiểm tra lại kết nối!");
       }
     }
   };

@@ -27,22 +27,37 @@ export default function AddCustomerForm({ isOpen, onClose, onSuccess }: Props) {
     onClose();
   };
 
-  const mapErrorToFields = (message: string) => {
+const mapErrorToFields = (message: string) => {
     const msg = message.toLowerCase();
     const newErrors: Record<string, string> = {};
     
-    if (msg.includes("số điện thoại") || msg.includes("phone")) newErrors.Phone = message;
-    if (msg.includes("email")) newErrors.Email = message;
-    if (msg.includes("tên") || msg.includes("fullname")) newErrors.FullName = message;
+    if (msg.includes("số điện thoại") || msg.includes("phone")) {
+      newErrors.Phone = message;
+    }
+    if (msg.includes("email")) {
+      newErrors.Email = message;
+    } 
+    if (msg.includes("tên") || msg.includes("fullname")) {
+      newErrors.FullName = message;
+    }
     
     if (Object.keys(newErrors).length === 0) {
         alert(message);
-    } else {
-        setFieldErrors(newErrors);
     }
+    
+    setFieldErrors(newErrors);
   };
 
-  const handleSubmit = async () => {
+  const serverErrorToField = (errors: any) => {
+    const result: Record<string, string> = {};
+    for (const key in errors) {
+      result[key] = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+    }
+    return result;
+  };
+
+const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setFieldErrors({}); 
 
     if (!formData.FullName || !formData.Phone) {
@@ -52,31 +67,33 @@ export default function AddCustomerForm({ isOpen, onClose, onSuccess }: Props) {
 
     try {
         const payload = {
-        ...formData,
-        Email: formData.Email.trim() === "" ? undefined : formData.Email,
-        ShippingAddress: formData.ShippingAddress.trim() === "" ? undefined : formData.ShippingAddress,
-        ReturnAddress: formData.ReturnAddress.trim() === "" ? undefined : formData.ReturnAddress,
+          ...formData,
+          Email: formData.Email.trim() === "" ? undefined : formData.Email,
+          ShippingAddress: formData.ShippingAddress.trim() === "" ? undefined : formData.ShippingAddress,
+          ReturnAddress: formData.ReturnAddress.trim() === "" ? undefined : formData.ReturnAddress,
         };
 
         const res: any = await createCustomer(payload);
         
         if (res && (res.success || res.id)) {
-        alert("Thêm khách hàng thành công!");
-        onSuccess(); 
-        handleClose(); 
-      } else if (res.message) {
-         mapErrorToFields(res.message);
-      }
+          alert("Thêm khách hàng thành công!");
+          onSuccess(); 
+          handleClose(); 
+        } else if (res.message) {
+          mapErrorToFields(res.message);
+        }
     } catch (error: any) {
       console.error("Lỗi thêm khách hàng:", error);
       const serverData = error.response?.data;
       
-      if (serverData?.errors) {
-        setFieldErrors(serverData.errors);
-      } else if (serverData?.message) {
-         mapErrorToFields(serverData.message);
+      if (serverData) {
+        if (serverData.errors) {
+          setFieldErrors(serverErrorToField(serverData.errors));
+        } else if (serverData.message) {
+          mapErrorToFields(serverData.message);
+        }
       } else {
-        alert("Có lỗi xảy ra khi lưu khách hàng. Vui lòng thử lại!");
+        alert("Có lỗi xảy ra khi lưu khách hàng. Vui lòng kiểm tra lại kết nối!");
       }
     }
   };
@@ -92,7 +109,7 @@ export default function AddCustomerForm({ isOpen, onClose, onSuccess }: Props) {
           <button onClick={handleClose} className={styles.btnCloseHeader}>&times;</button>
         </div>
 
-        <div className={styles.form}>
+        <form className={styles.form} onSubmit={handleSubmit}>          
           
           {/* Hàng 1: Họ và tên*/}
           <div className={styles.row}>
@@ -169,11 +186,11 @@ export default function AddCustomerForm({ isOpen, onClose, onSuccess }: Props) {
 
           <div className={styles.formActions}>
             <button type="button" onClick={handleClose} className={styles.btnCancel}>Hủy bỏ</button>
-            <button type="button" onClick={handleSubmit} className={styles.btnSubmit}>
+            <button type="submit" onClick={handleSubmit} className={styles.btnSubmit}>
               + Lưu khách hàng
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

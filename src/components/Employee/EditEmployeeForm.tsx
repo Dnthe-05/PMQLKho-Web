@@ -36,21 +36,33 @@ export default function EditEmployeeForm({ isOpen, onClose, onSuccess, employee 
   const mapErrorToFields = (message: string) => {
     const msg = message.toLowerCase();
     const newErrors: Record<string, string> = {};
-    
+
     if (msg.includes("tên đăng nhập") || msg.includes("username")) {
-        newErrors.Username = message;
+      newErrors.Username = message;
     }
     if (msg.includes("họ và tên") || msg.includes("fullname") || msg.includes("tên")) {
-        newErrors.FullName = message;
+      newErrors.FullName = message;
     }
-    
+    // Nếu form Edit của bạn có cho phép đổi mật khẩu thì giữ lại dòng này:
+    if (msg.includes("mật khẩu") || msg.includes("password")) {
+      newErrors.Password = message;
+    }
+
     if (Object.keys(newErrors).length === 0) {
-        alert(message);
-    } else {
-        setFieldErrors(newErrors);
+      alert(message);
     }
+
+    setFieldErrors(newErrors);
   };
 
+  const serverErrorToField = (errors: any) => {
+    const result: Record<string, string> = {};
+    for (const key in errors) {
+      result[key] = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+    }
+    return result;  
+  };
+  
   const handleSubmit = () => {
     setFieldErrors({});
 
@@ -84,12 +96,16 @@ export default function EditEmployeeForm({ isOpen, onClose, onSuccess, employee 
       }
     } catch (error: any) {
       const serverData = error.response?.data;
-      if (serverData?.errors) {
-        setFieldErrors(serverData.errors);
-      } else if (serverData?.message) {
-        mapErrorToFields(serverData.message);
+      console.log("Data lỗi từ Server:", serverData);
+
+      if (serverData) {
+        if (serverData.errors) {
+          setFieldErrors(serverErrorToField(serverData.errors));
+        } else if (serverData.message) {
+          mapErrorToFields(serverData.message);
+        }
       } else {
-        alert("Có lỗi xảy ra khi cập nhật!");
+        alert("Lỗi kết nối máy chủ hoặc lỗi không xác định!");
       }
     }
   };

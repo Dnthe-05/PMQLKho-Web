@@ -29,22 +29,37 @@ export default function AddEmployeeForm({ isOpen, onClose, onSuccess }: Props) {
     onClose();
   };
 
-  const mapErrorToFields = (message: string) => {
+const mapErrorToFields = (message: string) => {
     const msg = message.toLowerCase();
     const newErrors: Record<string, string> = {};
-    
-    if (msg.includes("tên đăng nhập") || msg.includes("username")) newErrors.Username = message;
-    if (msg.includes("họ và tên") || msg.includes("fullname") || msg.includes("tên")) newErrors.FullName = message;
-    if (msg.includes("mật khẩu") || msg.includes("password")) newErrors.Password = message;
-    
-    if (Object.keys(newErrors).length === 0) {
-        alert(message);
-    } else {
-        setFieldErrors(newErrors);
+
+    if (msg.includes("tên đăng nhập") || msg.includes("username")) {
+      newErrors.Username = message;
     }
+    if (msg.includes("họ tên") || msg.includes("họ và tên") || msg.includes("tên") || msg.includes("fullname")) {
+      newErrors.FullName = message;
+    }
+    if (msg.includes("mật khẩu") || msg.includes("password")) {
+      newErrors.Password = message;
+    }
+
+    if (Object.keys(newErrors).length === 0) {
+      alert(message);
+    }
+
+    setFieldErrors(newErrors);
   };
 
-  const handleSubmit = async () => {
+  const serverErrorToField = (errors: any) => {
+    const result: Record<string, string> = {};
+    for (const key in errors) {
+      result[key] = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+    }
+    return result;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setFieldErrors({}); 
 
     if (!formData.FullName || !formData.Username || !formData.Password) {
@@ -55,28 +70,31 @@ export default function AddEmployeeForm({ isOpen, onClose, onSuccess }: Props) {
     try {
       const finalData = { 
         ...formData, 
-        Role: Number(formData.Role)
+        Role: Number(formData.Role) 
       };
 
       const res: any = await createEmployee(finalData);
       
       if (res && (res.success || res.id)) {
         alert("Thêm nhân viên thành công!");
-        onSuccess(); 
-        handleClose(); 
+        onSuccess();
+        onClose();
       } else if (res.message) {
-         mapErrorToFields(res.message);
+        mapErrorToFields(res.message);
       }
     } catch (error: any) {
-      console.error("Lỗi thêm nhân viên:", error);
-      const serverData = error.response?.data;
       
-      if (serverData?.errors) {
-        setFieldErrors(serverData.errors);
-      } else if (serverData?.message) {
-         mapErrorToFields(serverData.message);
+      const serverData = error.response?.data;
+      console.log("Data lỗi từ Server:", serverData);
+
+      if (serverData) {
+        if (serverData.errors) {
+          setFieldErrors(serverErrorToField(serverData.errors));
+        } else if (serverData.message) {
+          mapErrorToFields(serverData.message);
+        }
       } else {
-        alert("Có lỗi xảy ra khi lưu nhân viên. Vui lòng thử lại!");
+        alert("Lỗi kết nối máy chủ hoặc lỗi không xác định!");
       }
     }
   };
@@ -95,8 +113,7 @@ export default function AddEmployeeForm({ isOpen, onClose, onSuccess }: Props) {
         </div>
 
 
-        <div className={styles.form}>
-          
+        <form className={styles.form} onSubmit={handleSubmit}>          
           <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', zIndex: -1 }}>
             <input type="text" name="fake_username_trap" tabIndex={-1} autoComplete="username" />
             <input type="password" name="fake_password_trap" tabIndex={-1} autoComplete="current-password" />
@@ -182,11 +199,11 @@ export default function AddEmployeeForm({ isOpen, onClose, onSuccess }: Props) {
           <div className={styles.formActions}>
            
             <button type="button" onClick={handleClose} className={styles.btnCancel}>Hủy bỏ</button>
-            <button type="button" onClick={handleSubmit} className={styles.btnSubmit}>
+            <button type="submit" className={styles.btnSubmit}>
               + Lưu nhân viên
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

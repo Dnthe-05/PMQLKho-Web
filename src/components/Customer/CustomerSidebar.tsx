@@ -46,7 +46,7 @@ const CustomerSidebar: React.FC<CustomerSidebarProps> = ({ filters, onFilterChan
 
         {/* Nút Reset */}
         <button
-          onClick={() => onFilterChange({})} 
+          onClick={() => onFilterChange({ isActive: true })} 
           className={styles.btnReset}
           style={{ marginTop: '30px' }}
         >

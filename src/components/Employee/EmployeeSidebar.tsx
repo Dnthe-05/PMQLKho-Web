@@ -80,7 +80,7 @@ const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ filters, onFilterChan
 
         {/* Nút Reset */}
         <button
-          onClick={() => onFilterChange({})} 
+          onClick={() => onFilterChange({ isActive: true })} 
           className={styles.btnReset}
           style={{ marginTop: '30px' }}
         >
