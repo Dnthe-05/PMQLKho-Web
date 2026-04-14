@@ -1,6 +1,5 @@
 import React from 'react';
 import { type Customer } from '../../types/Customer/Customer';
-
 import styles from '../../css/Product/ProductTable.module.css'; 
 
 interface CustomerTableProps {
@@ -8,11 +7,12 @@ interface CustomerTableProps {
   loading: boolean;
   onEdit: (customer: Customer) => void;
   onDelete: (id: number) => void;
+  onView: (id: number) => void;
   currentPage: number; 
   pageSize: number;
 }
 
-const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
+const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, onDelete, onView, currentPage, pageSize }) => {
   const safeData = data || [];
 
   if (loading) return <div className="text-center p-5">Đang tải dữ liệu...</div>;
@@ -82,6 +82,16 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ data, loading, onEdit, on
                   {/* Hoạt động */}
                   <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div className="flex justify-center gap-2">
+                      
+                      {/* 2. THÊM NÚT XEM CHI TIẾT */}
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ color: '#0284c7' }}
+                        onClick={() => onView(item.id)}
+                      >
+                        Xem
+                      </button>
+
                       {!isDeleted && (
                       <button 
                         className={styles.actionBtn} 

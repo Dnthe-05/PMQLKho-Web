@@ -22,3 +22,8 @@ export const deleteCustomer = async (id: number) => {
     const response = await axiosClient.patch(`/api/Customer/${id}`);
     return response.data;
 };
+
+export const getCustomerById = async (id: number) => {
+  const response = await axiosClient.get(`/api/Customer/${id}`); 
+  return response;
+};

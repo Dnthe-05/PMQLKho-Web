@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getCustomers, deleteCustomer } from '../../services/Customer/CustomerService';
 import { type Customer } from '../../types/Customer/Customer';
 import { type CustomerFilter } from '../../types/Customer/CustomerFilter';
-
+import { useNavigate } from 'react-router-dom';
 import CustomerTable from './CustomerTable';
 import CustomerSidebar from './CustomerSidebar';
 
@@ -28,6 +28,8 @@ const GetAllCustomerPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 10; 
+
+  const navigate = useNavigate();
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -123,6 +125,7 @@ const GetAllCustomerPage = () => {
             loading={loading} 
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
+            onView={(id) => navigate(`/khach-hang/chi-tiet/${id}`)}
             currentPage={currentPage}
             pageSize={pageSize}
           />

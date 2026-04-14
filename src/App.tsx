@@ -9,6 +9,7 @@ import GetAllEmployeePage from './components/Employee/GetAllEmployeePage';
 import LoginPage from './components/Auth/LoginPopup'; 
 import { getProfile } from './services/Auth/authService';
 import GetAllCustomerPage from './components/Customer/GetAllCustomerPage';
+import CustomerDetailPage from './components/Customer/CustomerDetailPage';
 
 const HomePage = () => (
   <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -76,6 +77,14 @@ const App = () => {
         <Route path="/khach-hang" element={
            user ? (
              <MainLayout user={user}><GetAllCustomerPage /></MainLayout>
+           ) : (
+             <Navigate to="/login" replace />
+           )
+        } />
+
+        <Route path="/khach-hang/chi-tiet/:id" element={
+          user ? (
+             <MainLayout user={user}><CustomerDetailPage /></MainLayout>
            ) : (
              <Navigate to="/login" replace />
            )

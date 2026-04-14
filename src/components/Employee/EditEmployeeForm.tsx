@@ -43,7 +43,7 @@ export default function EditEmployeeForm({ isOpen, onClose, onSuccess, employee 
     if (msg.includes("họ và tên") || msg.includes("fullname") || msg.includes("tên")) {
       newErrors.FullName = message;
     }
-    // Nếu form Edit của bạn có cho phép đổi mật khẩu thì giữ lại dòng này:
+    
     if (msg.includes("mật khẩu") || msg.includes("password")) {
       newErrors.Password = message;
     }
