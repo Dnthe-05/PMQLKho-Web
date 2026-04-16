@@ -2,7 +2,20 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://apicagguide.icafevietnam.com:5200/api/:path*"
+      "destination": "https://apicagguide.icafevietnam.com:5200/:path*"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://apicagguide.icafevietnam.com:5200/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
