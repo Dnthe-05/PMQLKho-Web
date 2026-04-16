@@ -11,6 +11,9 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // THÊM STATE ĐỂ QUẢN LÝ TAB ĐANG ACTIVE (Mặc định mở tab Lịch sử mua hàng)
+  const [activeTab, setActiveTab] = useState<'goodsIssues' | 'warranties'>('goodsIssues');
 
   const fetchDetail = async () => {
     try {
@@ -57,22 +60,34 @@ export default function CustomerDetailPage() {
         >
           &#8592; Quay lại
         </button>
-        <h2 className={styles.pageTitle} style={{ margin: 0 }}>
-          Hồ sơ khách hàng: <span style={{ color: '#0284c7' }}>{customer.fullName}</span>
+        
+        <h2 className={styles.pageTitle} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          Hồ sơ khách hàng: 
+          <span style={{ color: customer.deletedAt ? '#888' : '#0284c7', textDecoration: customer.deletedAt ? 'line-through' : 'none' }}>
+            {customer.fullName}
+          </span>
+          
+          {customer.deletedAt && (
+            <span style={{ fontSize: '0.8rem', background: '#fee2e2', color: '#dc2626', padding: '4px 8px', borderRadius: '4px', textDecoration: 'none' }}>
+              Ngừng hoạt động
+            </span>
+          )}
         </h2>
+
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button 
-              onClick={() => setIsEditModalOpen(true)}
-              style={{ padding: '8px 15px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              ✏️ Chỉnh sửa thông tin
-            </button>
+            {!customer.deletedAt && (
+              <button 
+                onClick={() => setIsEditModalOpen(true)}
+                style={{ padding: '8px 15px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                ✏️ Chỉnh sửa thông tin
+              </button>
+            )}
         </div>
       </div>
 
-      {/* --- THÔNG TIN CƠ BẢN (2 CỘT) --- */}
+      {/* --- THÔNG TIN CƠ BẢN --- */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        
         <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>👤 Thông tin liên lạc</h3>
           <p style={{ margin: '10px 0' }}><strong>Họ và tên:</strong> <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#333' }}>{customer.fullName}</span></p>
@@ -88,74 +103,146 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      {/* --- BẢNG 1: LỊCH SỬ MUA HÀNG --- */}
-      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
-        <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>🛒 Lịch sử mua hàng (Phiếu xuất)</h3>
-        <table className={styles.table} style={{ width: '100%', marginTop: '15px' }}>
-          <thead>
-            <tr className={styles.thRow}>
-              <th className={styles.th} style={{ width: '50px' }}>STT</th>
-              <th className={styles.th}>Mã Hóa Đơn</th>
-              <th className={styles.th}>Ngày Mua</th>
-              <th className={styles.th}>Tổng Tiền</th>
-              <th className={styles.th} style={{ textAlign: 'center' }}>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customer.goodsIssues && customer.goodsIssues.length > 0 ? (
-              customer.goodsIssues.map((item: any, index: number) => (
-                <tr key={index} className={styles.tr}>
-                  <td className={styles.td}>{index + 1}</td>
-                  <td className={styles.td}><strong>{item.code}</strong></td>
-                  <td className={styles.td}>{formatDate(item.issueDate)}</td>
-                  <td className={styles.td} style={{ color: '#16a34a', fontWeight: 'bold' }}>
-                    {formatCurrency(item.totalPrice)}
-                  </td>
-                  <td className={styles.td} style={{ textAlign: 'center' }}>
-                     <button onClick={() => navigate(`/xuat-kho/chi-tiet/${item.id}`)} style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', textDecoration: 'underline' }}>Xem</button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Khách hàng chưa có lịch sử mua hàng.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* --- BẢNG 2: LỊCH SỬ BẢO HÀNH --- */}
+      {/* --- PHẦN TABS LỊCH SỬ --- */}
       <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>🛡️ Lịch sử yêu cầu bảo hành</h3>
-        <table className={styles.table} style={{ width: '100%', marginTop: '15px' }}>
-          <thead>
-            <tr className={styles.thRow}>
-              <th className={styles.th} style={{ width: '50px' }}>STT</th>
-              <th className={styles.th}>Mã Phiếu BH</th>
-              <th className={styles.th}>Ngày Gửi</th>
-              <th className={styles.th}>Ngày Trả (Dự kiến)</th>
-              <th className={styles.th}>Trạng thái</th>
-              <th className={styles.th} style={{ textAlign: 'center' }}>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customer.warrantyCards && customer.warrantyCards.length > 0 ? (
-              customer.warrantyCards.map((item: any, index: number) => (
-                <tr key={index} className={styles.tr}>
-                  <td className={styles.td}>{index + 1}</td>
-                  <td className={styles.td}><strong>{item.code}</strong></td>
-                  <td className={styles.td}>{formatDate(item.receiveDate)}</td>
-                  <td className={styles.td}>{formatDate(item.returnDate)}</td>
-                  <td className={styles.td}>{renderWarrantyStatus(item.status)}</td>
-                  <td className={styles.td} style={{ textAlign: 'center' }}>
-                    <button onClick={() => navigate(`/bao-hanh/chi-tiet/${item.id}`)} style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', textDecoration: 'underline' }}>Xem</button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Khách hàng chưa có yêu cầu bảo hành nào.</td></tr>
+        
+        {/* Nút chuyển Tab */}
+        <div style={{ display: 'flex', gap: '20px', borderBottom: '2px solid #eee', marginBottom: '20px' }}>
+          <button
+            onClick={() => setActiveTab('goodsIssues')}
+            style={{
+              padding: '10px 5px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: activeTab === 'goodsIssues' ? '3px solid #0284c7' : '3px solid transparent',
+              color: activeTab === 'goodsIssues' ? '#0284c7' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1.05rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            🛒 Lịch sử mua hàng
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('warranties')}
+            style={{
+              padding: '10px 5px',
+              border: 'none',
+              background: 'transparent',
+              borderBottom: activeTab === 'warranties' ? '3px solid #0284c7' : '3px solid transparent',
+              color: activeTab === 'warranties' ? '#0284c7' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1.05rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            🛡️ Lịch sử yêu cầu bảo hành
+          </button>
+        </div>
+
+        {/* NỘI DUNG TAB 1: PHIẾU XUẤT */}
+        {activeTab === 'goodsIssues' && (
+          <div>
+            <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+              <table className={styles.table} style={{ width: '100%', margin: 0 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#f9fafb' }}>
+                  <tr className={styles.thRow}>
+                    <th className={styles.th} style={{ width: '50px' }}>STT</th>
+                    <th className={styles.th}>Mã Hóa Đơn</th>
+                    <th className={styles.th}>Ngày Mua</th>
+                    <th className={styles.th}>Tổng Tiền</th>
+                    <th className={styles.th} style={{ textAlign: 'center' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customer.goodsIssues && customer.goodsIssues.length > 0 ? (
+                    customer.goodsIssues.map((item: any, index: number) => (
+                      <tr key={index} className={styles.tr}>
+                        <td className={styles.td}>{index + 1}</td>
+                        <td className={styles.td}><strong>{item.code}</strong></td>
+                        <td className={styles.td}>{formatDate(item.issueDate)}</td>
+                        <td className={styles.td} style={{ color: '#16a34a', fontWeight: 'bold' }}>
+                          {formatCurrency(item.totalPrice)}
+                        </td>
+                        <td className={styles.td} style={{ textAlign: 'center' }}>
+                          <button onClick={() => navigate(`/xuat-kho/chi-tiet/${item.id}`)} style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', textDecoration: 'underline' }}>Xem</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Khách hàng chưa có lịch sử mua hàng.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Nút Xem tất cả (Chỉ hiện khi có dữ liệu) */}
+            {customer.goodsIssues && customer.goodsIssues.length > 0 && (
+              <div style={{ textAlign: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
+                <button 
+                  onClick={() => navigate(`/xuat-kho?searchTerm=${customer.fullName}`)}
+                  style={{ background: 'transparent', color: '#0284c7', border: 'none', fontWeight: 'bold', cursor: 'pointer', padding: '8px 15px' }}
+                >
+                  Xem tất cả hóa đơn của khách này &rarr;
+                </button>
+              </div>
             )}
-          </tbody>
-        </table>
+          </div>
+        )}
+
+        {/* NỘI DUNG TAB 2: BẢO HÀNH */}
+        {activeTab === 'warranties' && (
+          <div>
+            <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+              <table className={styles.table} style={{ width: '100%', margin: 0 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#f9fafb' }}>
+                  <tr className={styles.thRow}>
+                    <th className={styles.th} style={{ width: '50px' }}>STT</th>
+                    <th className={styles.th}>Mã Phiếu BH</th>
+                    <th className={styles.th}>Ngày Gửi</th>
+                    <th className={styles.th}>Ngày Trả (Dự kiến)</th>
+                    <th className={styles.th}>Trạng thái</th>
+                    <th className={styles.th} style={{ textAlign: 'center' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customer.warrantyCards && customer.warrantyCards.length > 0 ? (
+                    customer.warrantyCards.map((item: any, index: number) => (
+                      <tr key={index} className={styles.tr}>
+                        <td className={styles.td}>{index + 1}</td>
+                        <td className={styles.td}><strong>{item.code}</strong></td>
+                        <td className={styles.td}>{formatDate(item.receiveDate)}</td>
+                        <td className={styles.td}>{formatDate(item.returnDate)}</td>
+                        <td className={styles.td}>{renderWarrantyStatus(item.status)}</td>
+                        <td className={styles.td} style={{ textAlign: 'center' }}>
+                          <button onClick={() => navigate(`/bao-hanh/chi-tiet/${item.id}`)} style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', textDecoration: 'underline' }}>Xem</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Khách hàng chưa có yêu cầu bảo hành nào.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Nút Xem tất cả (Chỉ hiện khi có dữ liệu) */}
+            {customer.warrantyCards && customer.warrantyCards.length > 0 && (
+              <div style={{ textAlign: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
+                <button 
+                  onClick={() => navigate(`/bao-hanh?searchTerm=${customer.phone}`)}
+                  style={{ background: 'transparent', color: '#0284c7', border: 'none', fontWeight: 'bold', cursor: 'pointer', padding: '8px 15px' }}
+                >
+                  Xem tất cả phiếu bảo hành của khách này &rarr;
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
       {/* --- MODAL CHỈNH SỬA KHÁCH HÀNG --- */}

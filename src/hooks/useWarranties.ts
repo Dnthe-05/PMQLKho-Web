@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getWarranties } from '../services/Warranty/warrantyService';
 import {type WarrantyList } from '../types/Warranty/Warranty';
+import { useSearchParams } from 'react-router-dom';
+export const useWarranties = () => {  
 
-export const useWarranties = () => {
+  const [searchParams] = useSearchParams();
+  const urlSearchTerm = searchParams.get('searchTerm') || '';
+
   const [warranties, setWarranties] = useState<WarrantyList[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(urlSearchTerm);
   const [status, setStatus] = useState<string>('all');
   
   const [currentPage, setCurrentPage] = useState(1);

@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getGoodsReceipts, type GoodsReceiptResponse } from '../services/Warehouse/GoodsReceiptService';
+import { useSearchParams } from "react-router-dom";
 
 export function useGoodsReceipts() {
+
+  const [searchParams] = useSearchParams();
+  const urlSearchTerm = searchParams.get("searchTerm") || "";
+
   const [receipts, setReceipts] = useState<GoodsReceiptResponse[]>([]);
   const [loading, setLoading] = useState(true);
   
   // States cho Search và Filter
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(urlSearchTerm);
   const [status, setStatus] = useState('all'); 
   
   // Phân trang

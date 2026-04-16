@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { getGoodsIssues, type GoodsIssueResponse } from "../services/Warehouse/GoodsIssueService";
-
+import { useSearchParams } from "react-router-dom";
 export const useGoodsIssues = () => {
+
+  const [searchParams] = useSearchParams();
+  const urlSearchTerm = searchParams.get("searchTerm") || "";
+
   const [issues, setIssues] = useState<GoodsIssueResponse[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Các trạng thái lọc và phân trang
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(urlSearchTerm);
   const [status, setStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
