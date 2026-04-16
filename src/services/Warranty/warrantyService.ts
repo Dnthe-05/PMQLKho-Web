@@ -42,3 +42,34 @@ export const updateWarranty = async (id: number, data:any): Promise<ApiResponse<
 export const getProductBySerial = async (serialCode: string) => {
   return await axiosClient.get(`/api/WarrantyCard/get-product-name/${serialCode}`);
 };
+
+// Lấy lịch sử vòng đời máy
+export const getProductLifecycle = async (serialCode: string) => {
+  return await axiosClient.get(`/api/WarrantyCard/lifecycle/${serialCode}`);
+};
+
+// API đổi máy mới
+export const exchangeMachine = async (data: {
+  detailId: number;
+  newSerialId: number;
+  note: string;
+  additionalCost: number;
+}) => {
+  return await axiosClient.post("/api/WarrantyCard/exchange", data);
+};
+
+//Cho mượn máy
+export const loanMachine = async (data: {
+  detailId: number;
+  loanSerialId: number;
+  note: string;
+}) => {
+  return await axiosClient.post("/api/WarrantyCard/loan", data);
+};
+
+//Lấy danh sách Serial đang rảnh trong kho theo seri
+export const getAvailableSerials = async (search?: string) => {
+  return await axiosClient.get("/api/WarrantyCard/available-serials", {
+    params: { search }
+  });
+};
