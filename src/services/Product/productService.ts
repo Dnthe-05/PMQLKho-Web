@@ -50,8 +50,8 @@ export const deleteProduct = async (id: number) => {
 
 
 export const getCategories = async (params?: any) => {
-    const response = await axiosClient.get("/api/category", { params });
-    return response; // Trả về ApiResponse chứa data: PagedResponse
+    const response = await axiosClient.get("https://apicagguide.icafevietnam.com:5200/api/products", { params });
+    return response; 
 };
 
 export const getBrands = async (params?: any) => {
