@@ -16,7 +16,6 @@ export default function AttributeModal({ isOpen, onClose, onSave, title, initial
   const [parentText, setParentText] = useState('');
   const [unit, setUnit] = useState('');
 
-  // Mỗi khi mở modal hoặc đổi dữ liệu ban đầu, cập nhật lại ô input
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);

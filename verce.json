@@ -5,7 +5,8 @@
       "destination": "https://apicagguide.icafevietnam.com:5200/api/:path*"
     },
     {
-      "source": "/(.*)",
+
+      "source": "/((?!api|assets|favicon.ico).*)",
       "destination": "/index.html"
     }
   ]
