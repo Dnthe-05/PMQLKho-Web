@@ -85,7 +85,13 @@ export default function GoodsReceiptDetailPage() {
             fontSize: "14px",
           }}
         >
-          Trạng thái: {receipt.status === 1 ? "Hoàn tất" : "Lưu tạm"}
+          Trạng thái: {receipt.status === 1
+                        ? "Hàng mới"
+                        : receipt.status === 2
+                        ? "Hàng cũ"
+                        : receipt.status === 3
+                        ? "Hàng lỗi"
+                        : "Đã hủy"}
         </div>
       </div>
       <div

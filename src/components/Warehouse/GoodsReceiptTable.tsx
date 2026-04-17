@@ -48,14 +48,26 @@ export default function GoodsReceiptTable({ data, onDelete, onEdit }: Props) {
                   <span
                     style={{
                       background: item.status === 1 ? "#dcfce7" : "#fee2e2",
-                      color: item.status === 1 ? "#16a34a" : "#dc2626",
+                      color:
+                      item.status === 1 || item.status === 2
+                        ? "#16a34a"
+                        : item.status === 3
+                        ? "#ca8a04"
+                        : "#dc2626",
                       padding: "4px 10px",
                       borderRadius: "6px",
                       fontSize: "12px",
                       fontWeight: "bold",
                     }}
                   >
-                    {item.status === 1 ? "Hoàn thành" : "Đã hủy"}
+                    {item.status === 1
+                      ? "Hàng mới"
+                      : item.status === 2
+                      ? "Hàng cũ"
+                      : item.status === 3
+                      ? "Hàng lỗi"
+                      : "Đã hủy"
+                    }
                   </span>
                 </td>
                 <td className={styles.td}>

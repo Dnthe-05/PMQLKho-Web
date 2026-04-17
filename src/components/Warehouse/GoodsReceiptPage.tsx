@@ -73,7 +73,9 @@ export default function GoodsReceiptPage({ user }: { user: any }) {
             onChange={(e) => setStatus(e.target.value)}
           >
             <option value="all">Tất cả trạng thái</option>
-            <option value="1">Đã nhập kho</option>
+            <option value="1">Hàng mới</option>
+            <option value="2">Hàng cũ</option>
+            <option value="3">Hàng lỗi</option>
             <option value="0">Đã hủy</option>
           </select>
         </div>
