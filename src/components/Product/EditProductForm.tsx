@@ -12,6 +12,7 @@ import {
 import ConfirmModal from "../ConfirmModal";
 import { type UpdateProductDto } from "../../types/Product/updateProductDto";
 import type { Product } from "../../types/Product/product";
+import Select from 'react-select'; 
 
 
 interface EditableAttribute {
@@ -29,6 +30,16 @@ interface Props {
   product: Product | null;
 }
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const getFullImageUrl = (imagePath: string) => {
+  if (!imagePath) return '/logo.png';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+  const normalizedBase = baseURL.replace(/\/+$/g, '');
+  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 export default function EditProductForm({
   isOpen,
   onClose,
@@ -43,6 +54,8 @@ export default function EditProductForm({
   const [productAttributes, setProductAttributes] = useState<EditableAttribute[]>([]);
   const [initialAttributeCount, setInitialAttributeCount] = useState<number>(0);
   const [attributeDefinitions, setAttributeDefinitions] = useState<any[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   const [formData, setFormData] = useState<UpdateProductDto>({
     Name: "",
@@ -57,61 +70,40 @@ export default function EditProductForm({
     UnitId: 0,
   });
 
-  // 1. Lấy dữ liệu Dropdown
-  useEffect(() => {
+
+    useEffect(() => {
     const fetchSelectData = async () => {
       if (!product) return;
       try {
+        const params = { pageNumber: 1, pageSize: 1000 }; 
+
         const [catRes, brandRes, unitRes, attributesRes, productAttrRes]: any = await Promise.all([
-          getCategories(),
-          getBrands(),
-          getUnits(),
-          getAttributes(),
+          getCategories(params),
+          getBrands(params),
+          getUnits(params),
+          getAttributes(params),
           getProductAttributes(Number(product.id)),
         ]);
 
-        const categoriesArr = catRes?.items || catRes?.data?.items || catRes || [];
-        setCategories(categoriesArr);
-        const brandsArr = brandRes?.items || brandRes?.data?.items || brandRes || [];
-        setBrands(brandsArr);
-        const unitsArr = unitRes?.items || unitRes?.data?.items || unitRes || [];
-        setUnits(unitsArr);
+        const extractItems = (res: any) => res?.items || res?.data?.items || res || [];
 
-        const attrDefs = attributesRes?.items || attributesRes?.data?.items || attributesRes || [];
+        const cats = extractItems(catRes);
+        const brds = extractItems(brandRes);
+        const unts = extractItems(unitRes);
+        const attrDefs = extractItems(attributesRes);
+
+        setCategories(cats);
+        setBrands(brds);
+        setUnits(unts);
         setAttributeDefinitions(attrDefs);
 
-        const productAttrList: any[] =
-          productAttrRes?.attributes ||
-          productAttrRes?.data?.attributes ||
-          productAttrRes || [];
-
-        const mappedAttrs = (productAttrList || []).map((item: any) => {
-          const matched = attrDefs.find(
-            (def: any) =>
-              Number(def.id) === Number(item.attributeId) ||
-              def.name?.trim().toLowerCase() === item.name?.trim().toLowerCase()
-          );
-          return {
-            attributeId: matched?.id || 0,
-            name: item.name || "",
-            value: item.value || "",
-            unit: matched?.unit || item.unit || "",
-            missingId: !matched,
-          };
-        });
-
-        setInitialAttributeCount(
-          mappedAttrs.filter((attr) => attr.attributeId > 0 && attr.value.trim()).length
-        );
-        setProductAttributes(
-          mappedAttrs.length > 0
-            ? mappedAttrs
-            : [{ attributeId: 0, name: "", value: "", unit: "", missingId: false }]
-        );
+        const productAttrList = productAttrRes?.attributes || productAttrRes?.data?.attributes || productAttrRes || [];
+        
       } catch (error) {
         console.error("Lỗi lấy danh sách dropdown:", error);
       }
     };
+
     if (isOpen) fetchSelectData();
   }, [isOpen, product]);
 
@@ -137,6 +129,8 @@ export default function EditProductForm({
         BrandId: Number(bId),
         UnitId: Number(uId),
       });
+      setImagePreview(product.image ? getFullImageUrl(product.image) : '/logo.png');
+      setImageFile(null);
     }
   }, [product, isOpen, categories, brands, units]);
 
@@ -176,6 +170,15 @@ export default function EditProductForm({
     setProductAttributes((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -203,7 +206,21 @@ export default function EditProductForm({
   const handleConfirmSave = async () => {
     setShowConfirm(false);
     try {
-      await updateProduct(Number(product.id), formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('Name', formData.Name);
+      formDataToSend.append('SKU', formData.SKU);
+      formDataToSend.append('Location', formData.Location);
+      formDataToSend.append('ImportPrice', String(formData.ImportPrice));
+      formDataToSend.append('ExportPrice', String(formData.ExportPrice));
+      formDataToSend.append('StockQuantity', String(formData.StockQuantity));
+      formDataToSend.append('CategoryId', String(formData.CategoryId));
+      formDataToSend.append('BrandId', String(formData.BrandId));
+      formDataToSend.append('UnitId', String(formData.UnitId));
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
+
+      await updateProduct(Number(product.id), formDataToSend);
 
       const attributeUpdates = productAttributes
         .filter((attr) => attr.attributeId > 0 && attr.value.trim())
@@ -227,6 +244,22 @@ export default function EditProductForm({
     }
   };
 
+
+    const categoryOptions = categories.map(c => ({ value: Number(c.id), label: c.name }));
+    const brandOptions = brands.map(b => ({ value: Number(b.id), label: b.name }));
+    const unitOptions = units.map(u => ({ value: Number(u.id), label: u.name }));
+    const attrDefOptions = attributeDefinitions.map(a => ({ value: Number(a.id), label: a.name }));
+
+
+    const customSelectStyles = {
+      control: (base: any) => ({
+        ...base,
+        minHeight: '42px',
+        borderRadius: '6px',
+        borderColor: '#ddd'
+      })
+    };
+
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
@@ -240,7 +273,7 @@ export default function EditProductForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className={styles.form}>
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Tên sản phẩm *</label>
@@ -267,14 +300,23 @@ export default function EditProductForm({
           </div>
 
           <div className={styles.formGroup}>
-            <label>Link hình ảnh</label>
+            <label>Chọn ảnh sản phẩm</label>
             <input
-              type="text"
-              value={formData.Image}
-              onChange={(e) =>
-                setFormData({ ...formData, Image: e.target.value })
-              }
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
             />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px' }}>
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
+              />
+              <span style={{ fontSize: '12px', color: '#888' }}>
+                {imageFile ? "Xem trước ảnh mới đã chọn" : "Hiển thị ảnh hiện tại"}
+              </span>
+            </div>
           </div>
 
           <div className={styles.row}>
@@ -333,67 +375,54 @@ export default function EditProductForm({
           </div>
 
           <div className={styles.row}>
+              {/* Danh mục */}
             <div className={styles.formGroup}>
-              <label>Danh mục *</label>
-              <select
-                value={formData.CategoryId}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    CategoryId: Number(e.target.value),
-                  })
-                }
-                required
-              >
-                <option value={0} disabled>
-                  -- Chọn danh mục --
-                </option>
-                {categories.map((c) => (
-                  <option key={c.id} value={Number(c.id)}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <label style={{ fontWeight: 'bold' }}>Danh mục *</label>
+              <Select
+                placeholder="-- Chọn danh mục --"
+                options={categoryOptions}
+                // Tìm object tương ứng từ value trong formData để hiển thị
+                value={categoryOptions.find(opt => opt.value === formData.CategoryId) || null}
+                onChange={(opt) => setFormData({ 
+                  ...formData, 
+                  CategoryId: opt ? opt.value : 0 
+                })}
+                isSearchable={true} // Cho phép nhập để tìm
+                isClearable={true}
+                classNamePrefix="react-select" // Giúp dễ dàng custom CSS nếu cần
+              />
             </div>
 
+            {/* Thương hiệu */}
             <div className={styles.formGroup}>
-              <label>Thương hiệu *</label>
-              <select
-                value={formData.BrandId}
-                onChange={(e) =>
-                  setFormData({ ...formData, BrandId: Number(e.target.value) })
-                }
-                required
-              >
-                <option value={0} disabled>
-                  -- Chọn thương hiệu --
-                </option>
-                {brands.map((b) => (
-                  <option key={b.id} value={Number(b.id)}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+              <label style={{ fontWeight: 'bold' }}>Thương hiệu *</label>
+              <Select
+                placeholder="-- Chọn thương hiệu --"
+                options={brandOptions}
+                value={brandOptions.find(opt => opt.value === formData.BrandId) || null}
+                onChange={(opt) => setFormData({ 
+                  ...formData, 
+                  BrandId: opt ? opt.value : 0 
+                })}
+                isSearchable={true}
+                isClearable={true}
+              />
             </div>
 
+            {/* Đơn vị */}
             <div className={styles.formGroup}>
-              <label>Đơn vị *</label>
-              <select
-                value={formData.UnitId}
-                onChange={(e) =>
-                  setFormData({ ...formData, UnitId: Number(e.target.value) })
-                }
-                required
-              >
-                <option value={0} disabled>
-                  -- Chọn đơn vị --
-                </option>
-                {units.map((u) => (
-                  <option key={u.id} value={Number(u.id)}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+              <label style={{ fontWeight: 'bold' }}>Đơn vị *</label>
+              <Select
+                placeholder="-- Chọn đơn vị --"
+                options={unitOptions}
+                value={unitOptions.find(opt => opt.value === formData.UnitId) || null}
+                onChange={(opt) => setFormData({ 
+                  ...formData, 
+                  UnitId: opt ? opt.value : 0 
+                })}
+                isSearchable={true}
+                isClearable={true}
+              />
             </div>
           </div>
 

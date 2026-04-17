@@ -6,6 +6,15 @@ import { getProductById, getProductAttributes } from '../../services/Product/pro
 import EditProductForm from './EditProductForm';
 import styles from '../../css/Product/ProductDetailPage.module.css';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const getFullImageUrl = (imagePath: string | undefined) => {
+  if (!imagePath) return '/logo.png';
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+  const normalizedBase = baseURL.replace(/\/+$/g, '');
+  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -55,7 +64,7 @@ const ProductDetailPage: React.FC = () => {
                 <div className={styles.leftInfo}>
                     <div className={styles.productCard}>
                         <div className={styles.imageBox}>
-                            <img src={product.image || '/logo.png'} alt={product.name} />
+                            <img src={getFullImageUrl(product.image)} alt={product.name} />
                         </div>
                         <div className={styles.mainDetails}>
                             <div className={styles.headerRow}>

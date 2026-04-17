@@ -33,13 +33,21 @@ export const getProductById = async (id: number): Promise<any> => {
     return response.data; 
 };
 
-export const createProduct = async (data: any) => {
-    const response = await axiosClient.post("/api/product", data);
-    return response.data;
+export const createProduct = async (data: FormData) => {
+    const response = await axiosClient.post("/api/product", data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response;
 };
 
-export const updateProduct = async (id: number, data: any) => {
-    const response = await axiosClient.put(`/api/product/${id}`, data);
+export const updateProduct = async (id: number, data: FormData) => {
+    const response = await axiosClient.put(`/api/product/${id}`, data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response;
 };
 
