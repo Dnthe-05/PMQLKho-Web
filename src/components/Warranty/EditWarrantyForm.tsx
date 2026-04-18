@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/SharedForm.module.css';
-import { getWarrantyById, updateWarranty, getProductBySerial } from '../../services/Warranty/warrantyService';
+import { 
+    getWarrantyById, 
+    updateWarranty, 
+    getProductBySerial, 
+    getAvailableSerials, 
+    exchangeMachine,
+    loanMachine 
+} from '../../services/Warranty/warrantyService';
 import { useWarrantyValidation } from '../../hooks/useWarrantyValidation'; 
 import WarrantyItemTable from './WarrantyItemTable';
 
@@ -12,6 +19,7 @@ interface EditWarrantyItem {
   warrantyCost: number;
   sentToVendorDate: string;
   receivedFromVendorDate: string;
+  productId?: number; 
 }
 
 interface EditWarrantyFormProps {
@@ -33,6 +41,20 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
   const [backendError, setBackendError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // States chung cho kho máy
+  const [rawAvailableList, setRawAvailableList] = useState<any[]>([]);
+  const [filteredList, setFilteredList] = useState<any[]>([]);
+  const [exchangeTarget, setExchangeTarget] = useState({ detailId: 0, oldSerialCode: '' });
+
+  // Exchange States (Đổi máy)
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
+  const [exchangeNote, setExchangeNote] = useState('');
+  const [upgradeFee, setUpgradeFee] = useState(0);
+
+  // Loan States (Mượn máy)
+  const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
+  const [loanNote, setLoanNote] = useState('');
 
   const { validateDuplicate } = useWarrantyValidation();
 
@@ -56,13 +78,14 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
         setReturnDate(d.returnDate ? d.returnDate.split('T')[0] : '');
         setStatus(d.status || 1);
         setItems(d.details.map((item: any) => ({
-          id: item.id,
-          serialNumberId: item.serialNumberId.toString(),
+          id: item.id || item.warrantyCardDetailId || item.Id,
+          serialNumberId: item.serialCode || item.serialNumberId?.toString(),
+          productId: item.productId,
           productName: item.productName || 'Sản phẩm hiện tại',
           issueDescription: item.issueDescription || '',
           warrantyCost: item.warrantyCost || 0,
           sentToVendorDate: item.sentToVendorDate ? item.sentToVendorDate.split('T')[0] : '',
-          receivedFromVendorDate: item.receivedFromVendorDate ? item.receivedFromVendorDate.split('T')[0] : ''
+          receivedFromVendorDate: item.receivedFromVendorDate ? item.receivedFromVendorDate.split('T')[0] : '',
         })));
       }
     } catch (error) {
@@ -72,47 +95,75 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
     }
   };
 
+  const handleOpenExchange = async (index: number, oldSerialCode: string, productId: number, detailId: number) => {
+    try {
+        const res = await getAvailableSerials();
+        const rawList = res.data?.data || res.data || []; 
+        setRawAvailableList(rawList); 
+        setFilteredList(rawList);
+        setExchangeTarget({ detailId, oldSerialCode });
+        setUpgradeFee(0);
+        setExchangeNote('');
+        setIsExchangeModalOpen(true);
+    } catch (error) {
+        alert("Lỗi kết nối kho!");
+    }
+  };
+
+  const confirmExchange = async (machine: any) => {
+    if (!window.confirm(`Xác nhận đổi sang máy [${machine.serialcode}]?`)) return;
+    setIsSubmitting(true);
+    try {
+        await exchangeMachine({ 
+          detailId: exchangeTarget.detailId,
+          newSerialId: machine.serialNumberId,
+          additionalCost: upgradeFee,
+          note: exchangeNote || "Đổi máy mới từ kho cho khách" 
+        });
+        alert("Đổi máy thành công!");
+        setIsExchangeModalOpen(false);
+        onSuccess();
+        onClose();
+    } catch (error: any) {
+        alert(error.response?.data?.message || "Lỗi khi thực hiện đổi máy.");
+    } finally { setIsSubmitting(false); }
+  };
+
+  const handleOpenLoan = async (detailId: number, oldSerialCode: string) => {
+    try {
+        const res = await getAvailableSerials();
+        const rawList = res.data?.data || res.data || [];
+        setRawAvailableList(rawList);
+        setFilteredList(rawList);
+        setExchangeTarget({ ...exchangeTarget, detailId: detailId, oldSerialCode: oldSerialCode });
+        setLoanNote('');
+        setIsLoanModalOpen(true);
+    } catch (error) {
+        alert("Không lấy được danh sách máy kho!");
+    }
+  };
+
+  const confirmLoan = async (machine: any) => {
+    if (!window.confirm(`Cho khách mượn máy [${machine.serialcode}]?`)) return;
+    try {
+        await loanMachine({
+            detailId: exchangeTarget.detailId,
+            loanSerialId: machine.serialNumberId,
+            note: loanNote || "Cho mượn máy dùng tạm trong lúc chờ sửa chữa."
+        });
+        alert("Đã lập phiếu mượn máy!");
+        setIsLoanModalOpen(false);
+        onSuccess();
+        onClose();
+    } catch (error: any) {
+        alert(error.response?.data?.message || "Lỗi khi cho mượn máy.");
+    }
+};
+
   const handleConfirmSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBackendError(null);
-
-    const validItems = items.filter(item => 
-      item.serialNumberId.trim() !== '' && 
-      item.productName.trim() !== '' && 
-      item.productName !== 'Không tìm thấy'
-    );
-
-    if (validItems.length === 0) {
-      alert("Lỗi: Cần ít nhất 1 sản phẩm có mã Serial hợp lệ trong danh sách!");
-      return;
-    }
-
-    if (status === 3 || status === 4) {
-      const isMissingDate = validItems.some(item => !item.receivedFromVendorDate);
-      if (isMissingDate) {
-        alert(`Lỗi: Khi chuyển sang trạng thái ${status === 3 ? "Hoàn thành" : "Hủy"}, tất cả thiết bị phải có 'Ngày về từ hãng'!`);
-        return;
-      }
-    }
-
-    const serials = items.map(i => i.serialNumberId.trim().toUpperCase());
-    if (serials.some((s, idx) => serials.indexOf(s) !== idx)) {
-      alert("Lỗi: Có mã Serial bị trùng lặp trong danh sách!");
-      return;
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.sentToVendorDate && item.receivedFromVendorDate) {
-        if (new Date(item.receivedFromVendorDate) < new Date(item.sentToVendorDate)) {
-          alert(`Lỗi tại thiết bị ${i + 1}: Ngày nhận từ hãng không được nhỏ hơn ngày gửi đi!`);
-          return;
-        }
-      }
-    }
-
-    if (!window.confirm("Xác nhận cập nhật thay đổi?")) return;
-
+    if (!window.confirm("Xác nhận lưu các thay đổi của phiếu?")) return;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -124,23 +175,20 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
         status: status,
         details: items.map(i => ({
           id: i.id,
-          serialNumberId: parseInt(i.serialNumberId),
-          issueDescription: i.issueDescription.trim(),
+          serialNumberId: Number(i.productId),
+          issueDescription: (i.issueDescription || '').trim(),
           warrantyCost: Number(i.warrantyCost),
           sentToVendorDate: i.sentToVendorDate ? new Date(i.sentToVendorDate).toISOString() : null,
           receivedFromVendorDate: i.receivedFromVendorDate ? new Date(i.receivedFromVendorDate).toISOString() : null
         }))
       };
-
       await updateWarranty(warrantyId!, payload);
-      alert("Cập nhật thành công!");
+      alert("Cập nhật thông tin phiếu thành công!");
       onSuccess();
       onClose();
     } catch (error: any) {
-      setBackendError(error.response?.data?.message || "Lỗi cập nhật dữ liệu từ máy chủ.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      setBackendError(error.response?.data?.message || "Lỗi cập nhật dữ liệu.");
+    } finally { setIsSubmitting(false); }
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent, index: number) => {
@@ -148,29 +196,17 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
       e.preventDefault();
       const serialId = items[index].serialNumberId.trim();
       if (!serialId) return;
-
-      if (!validateDuplicate(items, index, serialId, 'serialNumberId')) {
-        const newItems = [...items];
-        newItems[index].serialNumberId = '';
-        setItems(newItems);
-        return;
-      }
-
       try {
         const response = await getProductBySerial(serialId);
         const d = response.data?.data || response.data;
         if (d) {
           const newItems = [...items];
-          newItems[index].productName = d.name || d.productName;
+          newItems[index].productName = d.productName || d.name;
+          newItems[index].productId = d.productId || d.id; 
           setItems(newItems);
           document.getElementById(`issue-edit-${index}`)?.focus();
         }
-      } catch (err) { 
-        alert("Không tìm thấy Serial!"); 
-        const newItems = [...items];
-        newItems[index].productName = 'Không tìm thấy';
-        setItems(newItems);
-      }
+      } catch (err) { alert("Không tìm thấy Serial này!"); }
     }
   };
 
@@ -189,7 +225,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent} style={{ width: '1000px' }}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>Cập Nhật Phiếu Bảo Hành #{warrantyId}</h2>
+          <h2 className={styles.modalTitle}>Cập Nhật Phiếu Bảo Hành {warrantyId}</h2>
           <button className={styles.btnCloseHeader} onClick={onClose}>&times;</button>
         </div>
 
@@ -197,42 +233,33 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
           <form onSubmit={handleConfirmSubmit}>
             <div className={styles.row}>
               <div className={styles.formGroup}>
-                <label>Số điện thoại *</label>
-                <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                <label>Số điện thoại</label>
+                <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)}/>
               </div>
               <div className={styles.formGroup}>
                 <label>Tên khách hàng *</label>
                 <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required />
               </div>
               <div className={styles.formGroup}>
-                <label>Trạng thái</label>
+                <label>Trạng thái phiếu</label>
                 <select value={status} onChange={(e) => setStatus(Number(e.target.value))}>
-                  <option value={1}>Tiếp nhận</option>
-                  <option value={2}>Đang sửa chữa</option>
-                  <option value={3}>Hoàn thành</option>
-                  <option value={4}>Hủy</option>
+                  <option value={1}>1. Tiếp nhận</option>
+                  <option value={2}>2. Đang xử lý</option>
+                  <option value={3}>3. Hoàn thành</option>
+                  <option value={4}>4. Hủy bỏ</option>
                 </select>
               </div>
             </div>
 
             <div className={styles.row}>
-              <div className={styles.formGroup} style={{ flex: 1.5 }}>
-                <label>Địa chỉ</label>
-                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Nhập địa chỉ..." />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Nơi nhận</label>
-                <input type="text" value={receiveLocation} onChange={(e) => setReceiveLocation(e.target.value)} placeholder="Chi nhánh..." />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Hẹn trả ngày</label>
-                <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} />
-              </div>
+              <div className={styles.formGroup} style={{ flex: 1.5 }}><label>Địa chỉ</label><input type="text" value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+              <div className={styles.formGroup}><label>Nơi nhận</label><input type="text" value={receiveLocation} onChange={(e) => setReceiveLocation(e.target.value)} /></div>
+              <div className={styles.formGroup}><label>Hẹn trả ngày</label><input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} /></div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-              <h3 style={{ fontSize: '15px' }}>Chi tiết thiết bị & Quá trình xử lý</h3>
-              <button type="button" onClick={addItem} className={styles.btnSubmit} style={{ padding: '4px 8px', background: '#28a745', fontSize: '12px' }}>+ Thêm dòng</button>
+              <h3 style={{ fontSize: '14px' }}>Danh sách thiết bị</h3>
+              <button type="button" onClick={addItem} className={styles.btnSubmit} style={{ padding: '4px 8px', background: '#28a745', fontSize: '11px' }}>+ Thêm dòng</button>
             </div>
 
             <WarrantyItemTable 
@@ -240,36 +267,96 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
               handleItemChange={handleItemChange}
               handleKeyDown={handleKeyDown}
               removeItem={removeItem}
+              onExchangeClick={handleOpenExchange} 
+              onLoanClick={handleOpenLoan} 
             />
 
             <div style={{ textAlign: 'right', padding: '15px', fontWeight: 'bold', fontSize: '16px', color: '#e31e24' }}>
               TỔNG CHI PHÍ: {items.reduce((sum, i) => sum + (Number(i.warrantyCost) || 0), 0).toLocaleString()} VNĐ
             </div>
 
-            {backendError && (
-              <div style={{ 
-                backgroundColor: '#fff1f0', 
-                border: '1px solid #ffa39e', 
-                color: '#e31e24', 
-                padding: '10px', 
-                borderRadius: '4px', 
-                marginBottom: '15px',
-                textAlign: 'center',
-                fontSize: '14px'
-              }}>
-                {backendError}
-              </div>
-            )}
+            {backendError && <div style={{ color: '#e31e24', textAlign: 'center', marginBottom: '10px' }}>{backendError}</div>}
 
             <div className={styles.formActions}>
               <button type="button" className={styles.btnCancel} onClick={onClose} disabled={isSubmitting}>Hủy bỏ</button>
-              <button type="submit" className={styles.btnSubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Đang cập nhật...' : 'Xác nhận Cập nhật'}
-              </button>
+              <button type="submit" className={styles.btnSubmit} disabled={isSubmitting}>Xác nhận Cập nhật</button>
             </div>
           </form>
         )}
       </div>
+
+      {isExchangeModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', width: '550px', boxShadow: '0 5px 20px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                <h3 style={{ margin: 0 }}>Thực hiện đổi máy mới</h3>
+                <button onClick={() => setIsExchangeModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
+            </div>
+            <p style={{ fontSize: '14px', marginBottom: '15px' }}>Đang xử lý cho máy lỗi: <strong style={{ color: '#e31e24' }}>{exchangeTarget.oldSerialCode}</strong></p>
+            <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Tìm mã Serial trong kho:</label>
+                <input type="text" placeholder="Nhập mã Serial để lọc nhanh..." style={{ width: '100%', padding: '10px', border: '1px solid #0284c7', borderRadius: '6px' }}
+                  onChange={(e) => {
+                    const search = e.target.value.toLowerCase();
+                    setFilteredList(rawAvailableList.filter(m => m.serialcode.toLowerCase().includes(search)));
+                  }}
+                />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Phí bù thêm / Hoàn trả (VNĐ):</label>
+                <input type="text" value={upgradeFee.toLocaleString()} onChange={(e) => setUpgradeFee(Number(e.target.value.replace(/\D/g, "")))} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Ghi chú đổi trả:</label>
+                <textarea value={exchangeNote} onChange={(e) => setExchangeNote(e.target.value)} placeholder="Lý do đổi..." style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '6px', height: '60px', resize: 'none' }} />
+            </div>
+            <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', background: '#f9f9f9' }}>
+              {filteredList.map((m: any, idx: number) => (
+                <div key={idx} onClick={() => confirmExchange(m)} style={{ padding: '12px', borderBottom: '1px solid #fff', cursor: 'pointer' }} onMouseOver={(e) => (e.currentTarget.style.background = '#e0f2fe')} onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}>
+                  <div style={{ fontWeight: 'bold', color: '#0284c7' }}>{m.serialcode}</div>
+                  <div style={{ fontSize: '11px', color: '#666' }}>{m.productName} - {m.price?.toLocaleString()}đ</div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setIsExchangeModalOpen(false)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '6px' }}>Đóng cửa sổ</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CHO MƯỢN MÁY TẠM THỜI */}
+      {isLoanModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', width: '500px', boxShadow: '0 5px 20px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+              <h3 style={{ margin: 0, color: '#a855f7' }}>🤝 Cho mượn máy dùng tạm</h3>
+              <button onClick={() => setIsLoanModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
+            </div>
+            <p style={{ fontSize: '14px', marginBottom: '15px' }}>Mượn máy cho dòng: <strong style={{ color: '#a855f7' }}>{exchangeTarget.oldSerialCode}</strong></p>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Tìm máy cho mượn:</label>
+              <input type="text" placeholder="Nhập mã máy..." style={{ width: '100%', padding: '10px', border: '1px solid #a855f7', borderRadius: '6px' }}
+                onChange={(e) => {
+                  const search = e.target.value.toLowerCase();
+                  setFilteredList(rawAvailableList.filter(m => m.serialcode.toLowerCase().includes(search)));
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Ghi chú mượn:</label>
+              <textarea placeholder="Tình trạng máy mượn..." style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', height: '80px', resize: 'none' }} onChange={(e) => setLoanNote(e.target.value)} />
+            </div>
+            <div style={{ maxHeight: '200px', overflowY: 'auto', background: '#f8fafc', borderRadius: '6px', border: '1px solid #eee' }}>
+              {filteredList.map((m: any, idx: number) => (
+                <div key={idx} onClick={() => confirmLoan(m)} style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid #fff' }} onMouseOver={(e) => (e.currentTarget.style.background = '#f3e8ff')} onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}>
+                  <div style={{ fontWeight: 'bold', color: '#a855f7' }}>{m.serialcode}</div>
+                  <div style={{ fontSize: '11px', color: '#666' }}>{m.productName}</div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setIsLoanModalOpen(false)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '6px' }}>Hủy bỏ</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

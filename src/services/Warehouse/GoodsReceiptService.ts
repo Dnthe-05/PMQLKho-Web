@@ -8,6 +8,7 @@ export interface GoodsReceiptDetailUpdateDto {
 
 export interface GoodsReceiptUpdateDto {
     note?: string;
+    status:number;
     //details: GoodsReceiptDetailUpdateDto[];
     productGroups: ProductSerialGroupDto[];
 }
@@ -66,6 +67,7 @@ export interface GoodsReceiptCreateDto {
     employeeId: number;     // Tương ứng public int EmployeeId
     note?: string;          // Tương ứng public string? Note
     createdAt: string;      // Tương ứng public DateTime CreatedAt (JSON sẽ là string ISO)
+    status: number;
     productGroups: ProductSerialGroupDto[]; // Tương ứng public List<string> SerialNumbers
 
 }

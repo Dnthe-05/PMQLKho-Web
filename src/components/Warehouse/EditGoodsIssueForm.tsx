@@ -35,7 +35,6 @@ export default function EditGoodsIssueForm({
   useEffect(() => {
     // Kiểm tra issueId phải có giá trị thực
     if (isOpen && issueId) {
-      console.log("Đang gọi API cho ID:", issueId); // Kiểm tra log này có chạy không
       setIsLoadingData(true);
 
       getGoodsIssueById(issueId) // Không cần .toString() nếu API nhận số
@@ -85,7 +84,40 @@ export default function EditGoodsIssueForm({
   }, [isOpen, issueId]); // Chú ý dependency
 
   if (!isOpen) return null;
+  // 1. Hàm thay đổi giá xuất trực tiếp trên dòng
+  const handlePriceChange = (productId: number, newPrice: string) => {
+    const priceValue = parseInt(newPrice.replace(/\D/g, "")) || 0;
+    setDetails((prev) =>
+      prev.map((item) =>
+        item.productId === productId ? { ...item, price: priceValue } : item
+      )
+    );
+  };
 
+  // 2. Hàm xóa từng mã Serial (đã tối ưu)
+  const removeSingleSerial = (productId: number, serialToDelete: string) => {
+    // Xóa khỏi mảng phẳng scannedSerials để Backend tính toán Delta hoàn kho
+    setScannedSerials((prev) => prev.filter((s) => s !== serialToDelete));
+
+    // Cập nhật mảng details để hiển thị giao diện
+    setDetails((prev) => {
+      return prev
+        .map((item) => {
+          if (item.productId === productId) {
+            const updatedSerials = item.serials.filter(
+              (s: string) => s !== serialToDelete,
+            );
+            return {
+              ...item,
+              serials: updatedSerials,
+              quantity: updatedSerials.length,
+            };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0); // Xóa dòng nếu không còn serial nào
+    });
+  };
   // 2. Xử lý quét thêm Serial (Backend sẽ trừ kho những mã mới này)
   const handleAddSerial = async () => {
     const sTrim = serialInput.trim();
@@ -115,15 +147,7 @@ export default function EditGoodsIssueForm({
           };
           return updated;
         }
-        return [
-          {
-            ...product,
-            quantity: 1,
-            serials: [sTrim],
-            price: product.importPrice,
-          },
-          ...prevDetails,
-        ];
+        return [{ ...product, quantity: 1, serials: [sTrim], price: product.exportPrice || product.importPrice || 0 }, ...prevDetails];
       });
       setActiveProductId(product.productId);
       setSerialInput("");
@@ -163,7 +187,11 @@ export default function EditGoodsIssueForm({
     try {
       const payload = {
         note: note.trim(),
-        serialNumbers: scannedSerials, // Backend so khớp danh sách này với Database
+        serialNumbers: scannedSerials, 
+        productPrices: details.map((d) => ({
+          productId: d.productId,
+          price: d.price, // Giá lấy từ ô input bạn vừa nhập
+        })),
       };
 
       await updateGoodsIssue(issueId!, payload);
@@ -286,6 +314,7 @@ export default function EditGoodsIssueForm({
                               : "transparent",
                         }}
                       >
+                        {/* CỘT SẢN PHẨM & SERIAL TAGS */}
                         <td style={{ padding: "12px" }}>
                           <div
                             style={{
@@ -316,16 +345,83 @@ export default function EditGoodsIssueForm({
                                   padding: "1px 6px",
                                   borderRadius: "4px",
                                   fontSize: "10px",
+                                  display: "flex",
+                                  alignItems: "center",
                                 }}
                               >
                                 {s}
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeSingleSerial(item.productId, s);
+                                  }}
+                                  style={{
+                                    marginLeft: "5px",
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                    fontWeight: "bold",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  &times;
+                                </span>
                               </span>
                             ))}
                           </div>
                         </td>
-                        <td style={{ textAlign: "center", fontSize: "14px" }}>
-                          {item.price?.toLocaleString()} ₫
+
+                        {/* CỘT GIÁ XUẤT (CÓ THỂ NHẬP) */}
+                        <td style={{ textAlign: "center", padding: "10px" }}>
+                          <div
+                            style={{
+                              position: "relative",
+                              display: "inline-block",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              value={item.price?.toLocaleString("vi-VN") || 0}
+                              onChange={(e) =>
+                                handlePriceChange(
+                                  item.productId,
+                                  e.target.value,
+                                )
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                width: "110px",
+                                padding: "6px 8px",
+                                textAlign: "right",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                color: "#333",
+                                outline: "none",
+                              }}
+                              onFocus={(e) =>
+                                (e.target.style.borderColor = "#F23A3A")
+                              }
+                              onBlur={(e) =>
+                                (e.target.style.borderColor = "#ddd")
+                              }
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                right: "-15px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                fontSize: "12px",
+                                color: "#888",
+                              }}
+                            >
+                              ₫
+                            </span>
+                          </div>
                         </td>
+
+                        {/* CỘT SỐ LƯỢNG (TỰ ĐỘNG THEO SERIAL) */}
                         <td style={{ textAlign: "center" }}>
                           <b
                             style={{
@@ -339,6 +435,8 @@ export default function EditGoodsIssueForm({
                             {item.quantity}
                           </b>
                         </td>
+
+                        {/* NÚT XÓA CẢ DÒNG */}
                         <td style={{ textAlign: "center" }}>
                           <button
                             type="button"
@@ -350,7 +448,6 @@ export default function EditGoodsIssueForm({
                               border: "none",
                               background: "none",
                               cursor: "pointer",
-                              fontSize: "18px",
                             }}
                           >
                             🗑️

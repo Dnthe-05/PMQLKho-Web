@@ -1,129 +1,158 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../../css/SharedLayout.module.css';
-import { getWarrantyById } from '../../services/Warranty/warrantyService';
+import { getWarrantyById, getProductLifecycle } from '../../services/Warranty/warrantyService';
+import {type MachineLifecycle } from "../../types/Warranty/LifecycleWarranty";
 import EditWarrantyForm from '../../components/Warranty/EditWarrantyForm';
 
 export default function WarrantyDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  
-  const [warranty, setWarranty] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
 
-  const fetchDetail = async () => {
-      try {
-        const response = await getWarrantyById(Number(id));
-        setWarranty(response.data?.data || response.data);
-      } catch (error) {
-        console.error("Lỗi tải chi tiết:", error);
-        alert("Không tìm thấy dữ liệu phiếu bảo hành!");
-      } finally {
-        setLoading(false);
-      }
+    const [warranty, setWarranty] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    
+    const [selectedLifecycle, setSelectedLifecycle] = useState<MachineLifecycle | null>(null);
+    const [isLifecycleLoading, setIsLifecycleLoading] = useState(false);
+
+    const fetchDetail = async () => {
+        try {
+            const response = await getWarrantyById(Number(id));
+            setWarranty(response.data?.data || response.data);
+        } catch (error) {
+            console.error("Lỗi tải chi tiết:", error);
+            alert("Không tìm thấy dữ liệu phiếu bảo hành!");
+        } finally {
+            setLoading(false);
+        }
     };
-  useEffect(() => {
-    if (id) fetchDetail();
-  }, [id]);
 
-  if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Đang tải dữ liệu...</div>;
-  if (!warranty) return <div style={{ padding: '50px', textAlign: 'center' }}>Không có dữ liệu!</div>;
+    const handleShowLifecycle = async (serial: string) => {
+        setIsLifecycleLoading(true);
+        try {
+            const res = await getProductLifecycle(serial);
+            // @ts-ignore
+            setSelectedLifecycle(res.data?.data || res.data);
+        } catch (error) {
+            console.error("Lỗi lấy vòng đời:", error);
+        } finally {
+            setIsLifecycleLoading(false);
+        }
+    };
 
-  const renderStatus = (status: number) => {
-    switch (status) {
-      case 1: return <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold' }}>Tiếp nhận</span>;
-      case 2: return <span style={{ background: '#ffedd5', color: '#c2410c', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold' }}>Đang xử lý</span>;
-      case 3: return <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold' }}>Hoàn thành</span>;
-      case 4: return <span style={{ background: '#fee2e2', color: '#dc2626', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold' }}>Đã hủy</span>;
-      default: return <span>Không rõ</span>;
-    }
-  };
+    const getActionStyle = (action: number) => {
+        switch(action) {
+            case 0: return { label: 'Hủy bỏ', color: '#ef4444' };
+            case 1: return { label: 'Tiếp nhận', color: '#3b82f6' };
+            case 2: return { label: 'Đổi mới', color: '#10b981' };
+            case 3: return { label: 'Cho mượn', color: '#a855f7' };
+            case 4: return { label: 'Gửi hãng', color: '#f59e0b' };
+            case 5: return { label: 'Hoàn thành', color: '#06b6d4' };
+            default: return { label: 'Khác', color: '#64748b' };
+        }
+    };
 
-  const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : '---';
+    useEffect(() => {
+        if (id) fetchDetail();
+    }, [id]);
 
-  return (
-    <div className={styles.pageContainer}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
-        <button 
-          onClick={() => navigate(-1)}
-          style={{ padding: '8px 15px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          &#8592; Quay lại
-        </button>
-        <h2 className={styles.pageTitle} style={{ margin: 0 }}>
-          Chi tiết phiếu bảo hành: <span style={{ color: '#e31e24' }}>{warranty.code}</span>
-        </h2>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button 
-              onClick={() => setIsEditModalOpen(true)}
-              style={{ padding: '6px 15px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-            Chỉnh sửa
-            </button>
-            
-            {renderStatus(warranty.status)}
-        </div>
-      </div>
+    if (loading) return <div style={{ padding: '50px', textAlign: 'center' }}>Đang tải dữ liệu...</div>;
+    if (!warranty) return <div style={{ padding: '50px', textAlign: 'center' }}>Không có dữ liệu!</div>;
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        
-        <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>👤 Thông tin khách hàng</h3>
-          <p><strong>Tên khách hàng:</strong> {warranty.customer?.customerName || warranty.customerName}</p>
-          <p><strong>Số điện thoại:</strong> {warranty.customer?.phone || warranty.phone}</p>
-          <p><strong>Địa chỉ:</strong> {warranty.customer?.address || warranty.address || '---'}</p>
-        </div>
+    const formatDate = (dateStr: string) => dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : '---';
 
-        <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>📅 Thông tin tiếp nhận</h3>
-          <p><strong>Ngày nhận:</strong> {formatDate(warranty.receiveDate)}</p>
-          <p><strong>Hẹn trả:</strong> {formatDate(warranty.returnDate)}</p>
-          <p><strong>Nơi nhận:</strong> {warranty.receiveLocation || '---'}</p>
-        </div>
-      </div>
+    return (
+        <div className={styles.pageContainer}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
+                <button onClick={() => navigate(-1)} style={{ padding: '8px 15px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    &#8592; Quay lại
+                </button>
+                <h2 className={styles.pageTitle} style={{ margin: 0 }}>
+                    Chi tiết phiếu bảo hành: <span style={{ color: '#e31e24' }}>{warranty.code}</span>
+                </h2>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button onClick={() => setIsEditModalOpen(true)} style={{ padding: '6px 15px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        Chỉnh sửa / Đổi máy
+                    </button>
+                </div>
+            </div>
 
-      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>🛠️ Chi tiết thiết bị bảo hành</h3>
-        <table className={styles.table} style={{ width: '100%', marginTop: '15px' }}>
-          <thead>
-            <tr className={styles.thRow}>
-              <th className={styles.th}>STT</th>
-              <th className={styles.th}>Mã Serial</th>
-              <th  className={styles.th}>Tên Sản Phẩm</th>
-              <th className={styles.th}>Tình trạng lỗi</th>
-              <th className={styles.th}>Ngày gửi hãng</th>
-              <th className={styles.th}>Ngày Trả từ hãng</th>
-              <th className={styles.th}>Chi phí (VNĐ)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {warranty.details && warranty.details.length > 0 ? (
-              warranty.details.map((item: any, index: number) => (
-                <tr key={index} className={styles.tr}>
-                  <td className={styles.td}>{index + 1}</td>
-                  <td className={styles.td}><strong>{item.serialCode || 'N/A'}</strong></td>
-                  <td className={styles.td}><strong>{item.productName || 'Chưa xác định'}</strong></td>
-                  <td className={styles.td}>{item.issueDescription || '---'}</td>
-                  <td className={styles.td}>{formatDate(item.sentToVendorDate)}</td>
-                  <td className={styles.td}>{formatDate(item.receivedFromVendorDate)}</td>
-                  <td className={styles.td} style={{ color: '#e31e24', fontWeight: 'bold' }}>
-                    {item.warrantyCost ? item.warrantyCost.toLocaleString('vi-VN') : '0'} ₫
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>Không có chi tiết sản phẩm</td></tr>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>Thông tin khách hàng</h3>
+                    <p><strong>Khách hàng:</strong> {warranty.customerName}</p>
+                    <p><strong>Số điện thoại:</strong> {warranty.phone}</p>
+                </div>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>Thông tin tiếp nhận</h3>
+                    <p><strong>Ngày nhận:</strong> {formatDate(warranty.receiveDate)}</p>
+                    <p><strong>Trạng thái:</strong> {
+                        warranty.status === 1 ? 'Tiếp nhận' : 
+                        warranty.status === 2 ? 'Đang xử lý' : 
+                        warranty.status === 3 ? 'Hoàn thành' : 'Hủy bỏ'
+                    }</p>
+                </div>
+            </div>
+
+            <div style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
+                <h3 style={{ borderBottom: '2px solid #f5f5f5', paddingBottom: '10px', marginTop: 0, color: '#333' }}>🛠️ Thiết bị bảo hành</h3>
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <table className={styles.table} style={{ width: '100%', marginTop: '10px' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
+                            <tr className={styles.thRow}>
+                                <th className={styles.th}>STT</th>
+                                <th className={styles.th}>Mã Serial (Lịch sử)</th>
+                                <th className={styles.th}>Sản Phẩm</th>
+                                <th className={styles.th}>Lỗi mô tả</th>
+                                <th className={styles.th}>Phí dịch vụ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {warranty.details?.map((item: any, index: number) => (
+                                <tr key={index} className={styles.tr}>
+                                    <td className={styles.td}>{index + 1}</td>
+                                    <td className={styles.td}>
+                                        <button onClick={() => handleShowLifecycle(item.serialCode)} style={{ background: 'none', border: 'none', color: '#0284c7', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
+                                            {item.serialCode}
+                                        </button>
+                                    </td>
+                                    <td className={styles.td}>{item.productName}</td>
+                                    <td className={styles.td}>{item.issueDescription}</td>
+                                    <td className={styles.td} style={{ color: '#e31e24', fontWeight: 'bold' }}>{item.warrantyCost?.toLocaleString()} ₫</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {selectedLifecycle && (
+                <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                        <h3 style={{margin: 0}}>Lịch sử thiết bị: <span style={{color: '#0284c7'}}>{selectedLifecycle.serial}</span></h3>
+                        <button onClick={() => setSelectedLifecycle(null)} style={{padding: '5px 15px', borderRadius: '5px', border: '1px solid #ccc', cursor: 'pointer'}}>Đóng</button>
+                    </div>
+                    <div style={{ maxHeight: '400px', overflowY: 'auto', paddingLeft: '10px' }}>
+                        {selectedLifecycle.timeline?.map((event, index) => {
+                            const style = getActionStyle(event.actionType);
+                            return (
+                                <div key={index} style={{ marginBottom: '20px', position: 'relative', paddingLeft: '25px', borderLeft: `2px solid ${style.color}` }}>
+                                    <div style={{ position: 'absolute', left: '-9px', top: '0', width: '16px', height: '16px', borderRadius: '50%', background: style.color, border: '3px solid white' }}></div>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '4px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>{new Date(event.date).toLocaleString('vi-VN')}</span>
+                                        <span style={{ fontSize: '10px', background: style.color, color: 'white', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>{style.label}</span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '14px', color: '#334155' }}>{event.description}</p>
+                                    {event.customer && <small style={{color: '#94a3b8'}}>Khách hàng: {event.customer}</small>}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             )}
-          </tbody>
-        </table>
-      </div>
-      <EditWarrantyForm 
-        isOpen={isEditModalOpen}
-        warrantyId={Number(id)}
-        onClose={() => setIsEditModalOpen(false)}
-        onSuccess={() => {fetchDetail();}}
-      />
-    </div>
-  );
+
+            <EditWarrantyForm isOpen={isEditModalOpen} warrantyId={Number(id)} onClose={() => setIsEditModalOpen(false)} onSuccess={fetchDetail} />
+        </div>
+    );
 }

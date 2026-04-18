@@ -7,14 +7,13 @@ interface AttributeTableProps {
   onAdd: () => void;
   onEdit: (item: BaseAttribute) => void;
   onDelete: (id: number) => void;
-  onRestore?: (id: number) => void; // Thêm hàm khôi phục
   loading?: boolean;
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
 }
 
 export default function AttributeTable({
-  title, data, onAdd, onEdit, onDelete, onRestore,
+  title, data, onAdd, onEdit, onDelete,
   loading, searchTerm, onSearchChange
 }: AttributeTableProps) {
 
@@ -97,14 +96,7 @@ export default function AttributeTable({
                             Xóa
                           </button>
                         </>
-                      ) : (
-                        <button 
-                          className={`${styles.actionBtn} ${styles.btnRestore}`} 
-                          onClick={() => onRestore?.(itemId)}
-                        >
-                          Khôi phục
-                        </button>
-                      )}
+                      ) : null}
                     </div>
                   </td>
                 </tr>

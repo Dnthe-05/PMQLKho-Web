@@ -29,6 +29,7 @@ export default function EditGoodsReceiptForm({
   onClose,
   onSuccess,
 }: Props) {
+  const [status, setStatus] = useState<number>(1);
   const [productList, setProductList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -64,7 +65,9 @@ export default function EditGoodsReceiptForm({
           setCode(data.code);
           setSupplierName(data.supplierName || data.supplier?.name);
           setNote(data.note || "");
-
+          if (data.status !== undefined) {
+            setStatus(data.status);
+          }
           if (data.details && Array.isArray(data.details)) {
             const mappedDetails: SelectedProductDetail[] = data.details.map(
               (d: any) => ({
@@ -164,8 +167,10 @@ export default function EditGoodsReceiptForm({
     try {
       const payload: GoodsReceiptUpdateDto = {
         note: note.trim(),
+        status: status,
         productGroups: details.map((d) => ({
           productId: d.productId,
+          price: d.importPrice,
           serials: d.serials,
         })),
       };
@@ -179,7 +184,18 @@ export default function EditGoodsReceiptForm({
       setIsSubmitting(false);
     }
   };
+  const handlePriceChange = (productId: number, newPrice: string) => {
+    // Chỉ giữ lại số
+    const priceValue = parseInt(newPrice.replace(/\D/g, "")) || 0;
 
+    setDetails((prev) =>
+      prev.map((item) =>
+        item.productId === productId
+          ? { ...item, importPrice: priceValue }
+          : item,
+      ),
+    );
+  };
   return (
     <div className={styles.modalOverlay}>
       <div
@@ -352,8 +368,56 @@ export default function EditGoodsReceiptForm({
                             ))}
                           </div>
                         </td>
-                        <td style={{ textAlign: "center", fontSize: "14px" }}>
-                          {item.importPrice?.toLocaleString()} ₫
+                        <td style={{ textAlign: "center", padding: "10px" }}>
+                          <div
+                            style={{
+                              position: "relative",
+                              display: "inline-block",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              // Hiển thị định dạng phân cách nghìn cho dễ đọc
+                              value={item.importPrice.toLocaleString("vi-VN")}
+                              onChange={(e) =>
+                                handlePriceChange(
+                                  item.productId,
+                                  e.target.value,
+                                )
+                              }
+                              onClick={(e) => e.stopPropagation()} // Không kích hoạt chọn hàng khi nhấn vào input
+                              style={{
+                                width: "110px",
+                                padding: "6px 8px",
+                                textAlign: "right",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                color: "#333",
+                                backgroundColor: "#fff",
+                                outline: "none",
+                              }}
+                              onFocus={(e) =>
+                                (e.target.style.borderColor = "#F23A3A")
+                              }
+                              onBlur={(e) =>
+                                (e.target.style.borderColor = "#ddd")
+                              }
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                right: "-15px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                fontSize: "12px",
+                                color: "#888",
+                              }}
+                            >
+                              ₫
+                            </span>
+                          </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <b
@@ -418,7 +482,29 @@ export default function EditGoodsReceiptForm({
                     <strong>Mã phiếu:</strong> {code}
                   </p>
                 </div>
-
+                <div
+                  className={styles.formGroup}
+                  style={{ marginBottom: "15px" }}
+                >
+                  <label style={{ fontSize: "13px", fontWeight: "600" }}>
+                    Trạng thái phiếu
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(parseInt(e.target.value))}
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      borderRadius: "4px",
+                      width: "100%",
+                    }}
+                  >
+                    <option value={1}>Hàng mới</option>
+                    <option value={2}>Hàng cũ</option>
+                    <option value={3}>Hàng lỗi</option>
+                    <option value={0}>Hủy</option>
+                  </select>
+                </div>
                 <div
                   className={styles.formGroup}
                   style={{ marginBottom: "15px" }}

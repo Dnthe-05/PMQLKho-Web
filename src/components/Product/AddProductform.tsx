@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/Product/AddProductForm.module.css'; 
-import { createProduct, getCategories, getBrands, getUnits, getAttributes, updateProductAttributes } from '../../services/Product/productService';
+import { createProduct, createCategory, createBrand, createUnit, getCategories, getBrands, getUnits, getAttributes, updateProductAttributes } from '../../services/Product/productService';
 
 interface Props {
   isOpen: boolean;
@@ -27,6 +27,11 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
   const [attributeOptions, setAttributeOptions] = useState<any[]>([]);
   const [attributeRows, setAttributeRows] = useState<AttributeRow[]>([emptyAttributeRow()]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('/logo.png');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [brandSearch, setBrandSearch] = useState('');
+  const [unitSearch, setUnitSearch] = useState('');
 
   const [formData, setFormData] = useState({
     Sku: '', 
@@ -36,33 +41,49 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
     ExportPrice: 0, 
     StockQuantity: 0,
     CategoryId: '', 
+    CategoryName: '',
     BrandId: '', 
+    BrandName: '',
     UnitId: '', 
+    UnitName: '',
     Image: '' 
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      const loadData = async () => {
-        try {
-          const [c, b, u, attrRes]: any = await Promise.all([
-            getCategories(), 
-            getBrands(), 
-            getUnits(),
-            getAttributes(),
-          ]);
-          setCategories(extractItems(c));
-          setBrands(extractItems(b));
-          setUnits(extractItems(u));
-          setAttributeOptions(extractItems(attrRes));
-          setAttributeRows([emptyAttributeRow()]);
-        } catch (err) {
-          console.error("Lỗi load dữ liệu:", err);
-        }
-      };
-      loadData();
+  const loadOptionData = async (search: string, getFn: (params?: any) => Promise<any>, setter: React.Dispatch<React.SetStateAction<any[]>>) => {
+    try {
+      const params: any = { pageNumber: 1, pageSize: 20 };
+      if (search) {
+        params.searchTerm = search;
+        params.search = search;
+      }
+      const response: any = await getFn(params);
+      setter(extractItems(response));
+    } catch (err) {
+      console.error('Lỗi load option:', err);
     }
-  }, [isOpen]);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          loadOptionData(categorySearch, getCategories, setCategories),
+          loadOptionData(brandSearch, getBrands, setBrands),
+          loadOptionData(unitSearch, getUnits, setUnits),
+        ]);
+
+        const attrRes: any = await getAttributes();
+        setAttributeOptions(extractItems(attrRes));
+        setAttributeRows([emptyAttributeRow()]);
+      } catch (err) {
+        console.error('Lỗi load dữ liệu:', err);
+      }
+    };
+
+    loadData();
+  }, [isOpen, categorySearch, brandSearch, unitSearch]);
 
   if (!isOpen) return null;
 
@@ -97,28 +118,116 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
     setAttributeRows((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const findOptionByName = (items: any[], name: string) => {
+    return items.find((item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase());
+  };
+
+  const handleEntityInputChange = (field: 'CategoryName' | 'BrandName' | 'UnitName', value: string) => {
+    const updated: any = { ...formData, [field]: value };
+    if (field === 'CategoryName') {
+      const matched = findOptionByName(categories, value);
+      updated.CategoryId = matched ? String(matched.id) : '';
+      setCategorySearch(value);
+    }
+    if (field === 'BrandName') {
+      const matched = findOptionByName(brands, value);
+      updated.BrandId = matched ? String(matched.id) : '';
+      setBrandSearch(value);
+    }
+    if (field === 'UnitName') {
+      const matched = findOptionByName(units, value);
+      updated.UnitId = matched ? String(matched.id) : '';
+      setUnitSearch(value);
+    }
+    setFormData(updated);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const resolveOrCreateEntity = async (
+    name: string,
+    idValue: string,
+    options: any[],
+    getFn: (params?: any) => Promise<any>,
+    createFn: (data: { name: string }) => Promise<any>
+  ) => {
+    const trimmedName = name?.trim();
+    if (!trimmedName) return 0;
+
+    const existing = findOptionByName(options, trimmedName);
+    if (existing) return Number(existing.id);
+
+    if (idValue && Number(idValue) > 0) {
+      return Number(idValue);
+    }
+
+    try {
+      const response: any = await getFn({ pageNumber: 1, pageSize: 20, searchTerm: trimmedName, search: trimmedName });
+      const foundItems = extractItems(response);
+      const found = findOptionByName(foundItems, trimmedName);
+      if (found) return Number(found.id);
+    } catch (err) {
+      console.warn('Không tìm thấy thực thể theo tên, sẽ tạo mới nếu cần:', err);
+    }
+
+    const created = await createFn({ name: trimmedName });
+    return Number(created?.id || created?.data?.id || 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
 
     try {
-      let finalImageUrl = formData.Image?.trim();
-      if (!finalImageUrl) {
-        finalImageUrl = '/logo.png';
+      const formDataToSend = new FormData();
+      const resolvedCategoryId = await resolveOrCreateEntity(
+        formData.CategoryName,
+        formData.CategoryId,
+        categories,
+        getCategories,
+        createCategory
+      );
+      const resolvedBrandId = await resolveOrCreateEntity(
+        formData.BrandName,
+        formData.BrandId,
+        brands,
+        getBrands,
+        createBrand
+      );
+      const resolvedUnitId = await resolveOrCreateEntity(
+        formData.UnitName,
+        formData.UnitId,
+        units,
+        getUnits,
+        (payload) => createUnit('unit', payload)
+      );
+
+      if (!resolvedCategoryId || !resolvedBrandId || !resolvedUnitId) {
+        alert('Vui lòng chọn hoặc nhập đầy đủ danh mục, thương hiệu và đơn vị.');
+        return;
       }
 
-      const finalData = { 
-        ...formData, 
-        Image: finalImageUrl,
-        ImportPrice: Number(formData.ImportPrice),
-        ExportPrice: Number(formData.ExportPrice),
-        StockQuantity: Number(formData.StockQuantity),
-        CategoryId: Number(formData.CategoryId),
-        BrandId: Number(formData.BrandId),
-        UnitId: Number(formData.UnitId)
-      };
+      formDataToSend.append('Sku', formData.Sku);
+      formDataToSend.append('Name', formData.Name);
+      formDataToSend.append('Location', formData.Location);
+      formDataToSend.append('ImportPrice', String(formData.ImportPrice));
+      formDataToSend.append('ExportPrice', String(formData.ExportPrice));
+      formDataToSend.append('StockQuantity', String(formData.StockQuantity));
+      formDataToSend.append('CategoryId', String(resolvedCategoryId));
+      formDataToSend.append('BrandId', String(resolvedBrandId));
+      formDataToSend.append('UnitId', String(resolvedUnitId));
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
 
-      const res: any = await createProduct(finalData);
+      const res: any = await createProduct(formDataToSend);
       const productId = Number(res?.id || res?.data?.id || res?.product?.id);
 
       if (!productId) {
@@ -142,9 +251,11 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
       setFormData({ 
         Sku: '', Name: '', Location: '', 
         ImportPrice: 0, ExportPrice: 0, StockQuantity: 0, 
-        CategoryId: '', BrandId: '', UnitId: '', Image: '' 
+        CategoryId: '', CategoryName: '', BrandId: '', BrandName: '', UnitId: '', UnitName: '', Image: '' 
       });
       setAttributeRows([emptyAttributeRow()]);
+      setImageFile(null);
+      setImagePreview('/logo.png');
     } catch (error: any) {
       const serverData = error.response?.data;
       if (serverData?.errors) setFieldErrors(serverData.errors);
@@ -163,7 +274,7 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
           <button onClick={onClose} className={styles.btnCloseHeader}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
           {/* PHẦN 1: Tên & SKU */}
           <div className={styles.row}>
             <div className={styles.formGroup}>
@@ -192,17 +303,33 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Danh mục *</label>
-              <select required value={formData.CategoryId} onChange={e => setFormData({...formData, CategoryId: e.target.value})}>
-                <option value="">-- Chọn danh mục --</option>
-                {categories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <input
+                list="categoryOptions"
+                required
+                value={formData.CategoryName}
+                onChange={(e) => handleEntityInputChange('CategoryName', e.target.value)}
+                placeholder="Chọn hoặc nhập danh mục"
+              />
+              <datalist id="categoryOptions">
+                {categories?.map((c: any) => (
+                  <option key={c.id} value={c.name} />
+                ))}
+              </datalist>
             </div>
             <div className={styles.formGroup}>
               <label>Thương hiệu *</label>
-              <select required value={formData.BrandId} onChange={e => setFormData({...formData, BrandId: e.target.value})}>
-                <option value="">-- Chọn thương hiệu --</option>
-                {brands?.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
+              <input
+                list="brandOptions"
+                required
+                value={formData.BrandName}
+                onChange={(e) => handleEntityInputChange('BrandName', e.target.value)}
+                placeholder="Chọn hoặc nhập thương hiệu"
+              />
+              <datalist id="brandOptions">
+                {brands?.map((b: any) => (
+                  <option key={b.id} value={b.name} />
+                ))}
+              </datalist>
             </div>
           </div>
 
@@ -210,10 +337,18 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Đơn vị tính *</label>
-              <select required value={formData.UnitId} onChange={e => setFormData({...formData, UnitId: e.target.value})}>
-                <option value="">-- Chọn đơn vị --</option>
-                {units?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
-              </select>
+              <input
+                list="unitOptions"
+                required
+                value={formData.UnitName}
+                onChange={(e) => handleEntityInputChange('UnitName', e.target.value)}
+                placeholder="Chọn hoặc nhập đơn vị"
+              />
+              <datalist id="unitOptions">
+                {units?.map((u: any) => (
+                  <option key={u.id} value={u.name} />
+                ))}
+              </datalist>
             </div>
             <div className={styles.formGroup}>
               <label>Vị trí kho</label>
@@ -266,26 +401,24 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }: Props) {
             </div>
           </div>
 
-          {/* PHẦN 5: Hình ảnh (Link URL) */}
+          {/* PHẦN 5: Hình ảnh */ }
           <div className={styles.formGroup}>
-            <label>Link ảnh sản phẩm (URL)</label>
+            <label>Chọn ảnh sản phẩm</label>
             <input 
-              type="text" 
-              placeholder="Dán link ảnh từ Google/Web vào đây..."
-              value={formData.Image}
-              onChange={(e) => setFormData({...formData, Image: e.target.value})}
-              className={styles.urlInput}
+              type="file" 
+              accept="image/*"
+              onChange={handleImageChange}
             />
             
             <div className={styles.previewContainer} style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px' }}>
               <img 
-                src={formData.Image?.trim() || '/logo.png'} 
+                src={imagePreview} 
                 alt="Preview" 
                 style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }}
-                onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Loi+Link+Anh'; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
               />
               <span style={{ fontSize: '12px', color: '#888' }}>
-                {formData.Image?.trim() ? "Xem trước ảnh từ Link" : "Sẽ dùng logo mặc định nếu để trống"}
+                {imageFile ? "Xem trước ảnh đã chọn" : "Sẽ dùng logo mặc định nếu không chọn ảnh"}
               </span>
             </div>
           </div>

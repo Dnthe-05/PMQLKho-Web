@@ -35,7 +35,7 @@ export default function AddGoodsReceiptForm({
   const suppliers = Array.isArray(rawData)
     ? rawData
     : (rawData as any)?.items || [];
-
+  const [status, setStatus] = useState<number>(1);
   const [productList, setProductList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -60,7 +60,18 @@ export default function AddGoodsReceiptForm({
   }, [isOpen]);
 
   if (!isOpen) return null;
+  const handlePriceChange = (productId: number, newPrice: string) => {
+    // Loại bỏ các ký tự không phải số và parse
+    const priceValue = parseInt(newPrice.replace(/\D/g, "")) || 0;
 
+    setDetails((prev) =>
+      prev.map((item) =>
+        item.productId === productId
+          ? { ...item, importPrice: priceValue }
+          : item,
+      ),
+    );
+  };
   const handleSelectProduct = (product: any) => {
     if (details.some((d) => d.productId === product.id)) {
       setActiveProductId(product.id);
@@ -139,9 +150,11 @@ export default function AddGoodsReceiptForm({
         supplierId: parseInt(supplierId),
         employeeId: user?.id,
         note: note.trim(),
+        status: status,
         createdAt: new Date().toISOString(),
         productGroups: details.map((d) => ({
           productId: d.productId,
+          price: d.importPrice,
           serials: d.serials,
         })),
       };
@@ -151,6 +164,7 @@ export default function AddGoodsReceiptForm({
       onClose();
       setDetails([]);
       setCode("");
+      setStatus(1);
       setNote("");
     } catch (error: any) {
       alert(error.response?.data?.message || "Lỗi nhập kho");
@@ -317,8 +331,48 @@ export default function AddGoodsReceiptForm({
                             ))}
                           </div>
                         </td>
-                        <td style={{ textAlign: "center", fontSize: "14px" }}>
-                          {item.importPrice?.toLocaleString()} ₫
+                        <td style={{ textAlign: "center", padding: "10px" }}>
+                          <div
+                            style={{
+                              position: "relative",
+                              display: "inline-block",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              value={item.importPrice.toLocaleString("vi-VN")}
+                              onChange={(e) =>
+                                handlePriceChange(
+                                  item.productId,
+                                  e.target.value,
+                                )
+                              }
+                              onClick={(e) => e.stopPropagation()} // Ngăn việc chọn hàng khi đang nhấn vào ô nhập
+                              style={{
+                                width: "110px",
+                                padding: "6px 8px",
+                                textAlign: "right",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                color: "#333",
+                                backgroundColor: "#fff",
+                              }}
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                right: "-15px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                fontSize: "12px",
+                                color: "#888",
+                              }}
+                            >
+                              ₫
+                            </span>
+                          </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <b
@@ -391,7 +445,28 @@ export default function AddGoodsReceiptForm({
                   ))}
                 </select>
               </div>
-
+              <div
+                className={styles.formGroup}
+                style={{ marginBottom: "15px" }}
+              >
+                <label style={{ fontSize: "13px", fontWeight: "600" }}>
+                  Trạng thái phiếu
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(parseInt(e.target.value))}
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <option value={1}>Hàng mới</option>
+                  <option value={2}>Hàng cũ</option>
+                  <option value={3}>Hàng lỗi</option>
+                  <option value={0}>Hủy</option>
+                </select>
+              </div>
               <div
                 className={styles.formGroup}
                 style={{ marginBottom: "20px" }}

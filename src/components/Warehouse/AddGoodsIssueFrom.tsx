@@ -16,6 +16,7 @@ interface AddGoodsIssueFormProps {
 
 interface DetailWithInfo extends ScanSerialResponseDto {
   quantity: number;
+  price: number;
   serials: string[];
 }
 
@@ -83,7 +84,15 @@ export default function AddGoodsIssueForm({
           };
           return updated;
         }
-        return [{ ...product, quantity: 1, serials: [sTrim] }, ...prevDetails];
+        return [
+          {
+            ...product,
+            quantity: 1,
+            serials: [sTrim],
+            price: product.exportPrice || product.importPrice || 0,
+          },
+          ...prevDetails,
+        ];
       });
       setActiveProductId(product.productId);
       setSerialInput("");
@@ -106,7 +115,15 @@ export default function AddGoodsIssueForm({
       if (activeProductId === productId) setActiveProductId(null);
     }
   };
+  const handlePriceChange = (productId: number, newPrice: string) => {
+    const priceValue = parseInt(newPrice.replace(/\D/g, "")) || 0;
 
+    setDetails((prev) =>
+      prev.map((item) =>
+        item.productId === productId ? { ...item, price: priceValue } : item,
+      ),
+    );
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (scannedSerials.length === 0)
@@ -128,8 +145,12 @@ export default function AddGoodsIssueForm({
         note: note.trim(),
         issueDate: new Date().toISOString(),
         serialNumbers: scannedSerials,
+        productPrices: details.map((d) => ({
+          productId: d.productId,
+          price: d.price,
+        })),
       };
-
+      console.log("Dữ liệu gửi lên Backend:", payload);
       await createGoodsIssue(payload);
       alert("Xuất kho thành công!");
       onSuccess();
@@ -149,7 +170,29 @@ export default function AddGoodsIssueForm({
       setIsSubmitting(false);
     }
   };
+  const removeSingleSerial = (productId: number, serialToDelete: string) => {
+    // 1. Xóa khỏi danh sách tổng để cho phép quét lại mã này nếu muốn
+    setScannedSerials((prev) => prev.filter((s) => s !== serialToDelete));
 
+    // 2. Cập nhật lại danh sách chi tiết (giảm quantity và lọc bỏ serial)
+    setDetails((prev) => {
+      return prev
+        .map((item) => {
+          if (item.productId === productId) {
+            const updatedSerials = item.serials.filter(
+              (s) => s !== serialToDelete,
+            );
+            return {
+              ...item,
+              serials: updatedSerials,
+              quantity: updatedSerials.length,
+            };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0); // Nếu sản phẩm không còn serial nào thì xóa luôn dòng đó
+    });
+  };
   return (
     <div className={styles.modalOverlay}>
       <div
@@ -284,16 +327,72 @@ export default function AddGoodsIssueForm({
                                 border: "1px solid #ddd",
                                 padding: "1px 6px",
                                 borderRadius: "4px",
-                                fontSize: "10px",
+                                fontSize: "11px",
+                                display: "flex",
+                                alignItems: "center",
                               }}
                             >
                               {s}
+                              <span
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Ngăn việc trigger activeProductId của hàng
+                                  removeSingleSerial(item.productId, s);
+                                }}
+                                style={{
+                                  marginLeft: "5px",
+                                  color: "#ff4d4f",
+                                  cursor: "pointer",
+                                  fontWeight: "bold",
+                                  fontSize: "14px",
+                                  lineHeight: "1",
+                                }}
+                              >
+                                &times;
+                              </span>
                             </span>
                           ))}
                         </div>
                       </td>
-                      <td style={{ textAlign: "center", fontSize: "14px" }}>
-                        {item.importPrice?.toLocaleString()} ₫
+                      <td style={{ textAlign: "center", padding: "10px" }}>
+                        <div
+                          style={{
+                            position: "relative",
+                            display: "inline-block",
+                          }}
+                        >
+                          <input
+                            type="text"
+                            value={item.price?.toLocaleString("vi-VN") || 0}
+                            onChange={(e) =>
+                              handlePriceChange(item.productId, e.target.value)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              width: "110px",
+                              padding: "6px 8px",
+                              textAlign: "right",
+                              border: "1px solid #ddd",
+                              borderRadius: "4px",
+                              fontSize: "14px",
+                              fontWeight: "bold",
+                              color: "#333",
+                              backgroundColor: "#fff",
+                              outline: "none",
+                            }}
+                          />
+                          <span
+                            style={{
+                              position: "absolute",
+                              right: "-15px",
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              fontSize: "12px",
+                              color: "#888",
+                            }}
+                          >
+                            ₫
+                          </span>
+                        </div>
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <b
