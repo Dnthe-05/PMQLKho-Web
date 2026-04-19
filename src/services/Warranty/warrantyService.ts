@@ -63,6 +63,7 @@ export const loanMachine = async (data: {
   detailId: number;
   loanSerialId: number;
   note: string;
+  returnDate:Date;
 }) => {
   return await axiosClient.post("/api/WarrantyCard/loan", data);
 };
@@ -73,3 +74,13 @@ export const getAvailableSerials = async (search?: string) => {
     params: { search }
   });
 };
+
+export const getWarrantyWarnings = async (search: string = "", page: number = 1, pageSize: number = 10) => {
+    return await axiosClient.get(`api/WarrantyCard/warnings`, {
+        params: {
+            search: search,
+            page: page,
+            pageSize: pageSize
+        }
+    });
+}

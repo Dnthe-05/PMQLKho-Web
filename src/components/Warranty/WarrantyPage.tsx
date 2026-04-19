@@ -41,7 +41,6 @@ export default function WarrantyPage() {
             <option value="1">Tiếp nhận</option>
             <option value="2">Đang xử lý</option>
             <option value="3">Hoàn thành</option>
-            <option value="4">Hủy</option>
           </select>
         </div>
 
