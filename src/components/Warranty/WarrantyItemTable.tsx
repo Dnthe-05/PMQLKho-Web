@@ -10,6 +10,7 @@ interface EditWarrantyItem {
   sentToVendorDate: string;
   receivedFromVendorDate: string;
   productId?: number;
+  isLoan?: boolean;
 }
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   onLoanClick: (detailId: number, oldSerialCode: string) => void;
   onRowClick: (index: number) => void;
   selectedIndex: number;
+  onReturnLoanClick: (detailId: number) => void;
 }
 
 export default function WarrantyItemTable({ 
@@ -29,7 +31,8 @@ export default function WarrantyItemTable({
   handleKeyDown, 
   removeItem, 
   onExchangeClick,
-  onLoanClick 
+  onLoanClick,
+  onReturnLoanClick 
 }: Props) {
   return (
     <div style={{ 
@@ -60,13 +63,23 @@ export default function WarrantyItemTable({
               Đổi máy mới
               </button>
 
-              <button 
-                type="button"
-                onClick={() => onLoanClick(item.id || 0, item.serialNumberId)}
-                style={{ padding: '6px 14px', fontSize: '11px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-              Cho mượn tạm
-              </button>
+              {item.isLoan ? (
+                  <button 
+                    type="button"
+                    onClick={() => onReturnLoanClick(item.id || 0)}
+                    style={{ padding: '6px 14px', fontSize: '11px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Thu hồi máy mượn
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={() => onLoanClick(item.id || 0, item.serialNumberId)}
+                    style={{ padding: '6px 14px', fontSize: '11px', background: '#a855f7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Cho mượn tạm
+                  </button>
+                )}
             </div>
           </div>
 

@@ -68,6 +68,11 @@ export const loanMachine = async (data: {
   return await axiosClient.post("/api/WarrantyCard/loan", data);
 };
 
+//trả máy
+export const ReturnloanMachine = async (detailId: number) => {
+  return await axiosClient.post(`/api/WarrantyCard/return-loan/${detailId}`);
+};
+
 //Lấy danh sách Serial đang rảnh trong kho theo seri
 export const getAvailableSerials = async (search?: string) => {
   return await axiosClient.get("/api/WarrantyCard/available-serials", {

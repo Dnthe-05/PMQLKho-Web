@@ -164,7 +164,6 @@ export default function WarrantyDetailPage() {
                     </div>
                     <div style={{ maxHeight: '400px', overflowY: 'auto', paddingLeft: '10px' }}>
                         {selectedLifecycle?.timeline?.map((event, index) => {
-                            console.log("Dữ liệu thực tế của một dòng:", event);
                             const style = getActionStyle(Number(event.actionName));
                             return (
                                 <div key={index} style={{ marginBottom: '20px', position: 'relative', paddingLeft: '25px', borderLeft: `2px solid ${style.color}` }}>

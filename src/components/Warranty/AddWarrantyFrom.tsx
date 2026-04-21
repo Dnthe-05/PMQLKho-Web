@@ -3,6 +3,8 @@ import styles from '../../css/SharedForm.module.css';
 import { createWarranty, getProductBySerial } from '../../services/Warranty/warrantyService';
 import { type CreateWarrantyDTO } from '../../types/Warranty/AddWarranty';
 import { useWarrantyValidation } from '../../hooks/useWarrantyValidation';
+import { getCustomers } from '../../services/Customer/CustomerService';
+
 interface WarrantyItem {
   serialCode: string;
   serialNumberId?: number;
@@ -25,6 +27,7 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<number | null>(null);
 
   const { validateDuplicate } = useWarrantyValidation();
   
@@ -38,23 +41,21 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      setServerError(null); // Reset lỗi khi mở lại modal
+      setServerError(null);
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  const [items, setItems] = useState<WarrantyItem[]>([emptyItem]);
+  const [items, setItems] = useState<WarrantyItem[]>([{ ...emptyItem }]);
 
   const handleKeyDown = async (e: React.KeyboardEvent, index: number) => {
     if (e.key === 'Enter') {
       e.preventDefault(); 
-      
       const codeToSearch = items[index].serialCode.trim();
       if (!codeToSearch) return;
 
-      // SỬ DỤNG HOOK KIỂM TRA TRÙNG
       if (!validateDuplicate(items, index, codeToSearch, 'serialCode')) {
         const newItems = [...items];
         newItems[index].serialCode = '';
@@ -110,6 +111,7 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
     setItems([{ ...emptyItem }]);
     setErrors({});
     setServerError(null);
+    setCustomerId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +132,8 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
           .filter(item => item.serialNumberId !== undefined)
           .map(item => ({
             serialNumberId: item.serialNumberId as number,
-            issueDescription: item.issueDescription.trim()
+            issueDescription: item.issueDescription.trim(),
+            processingType: "1"
           }))
       };
 
@@ -140,11 +143,27 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
       onSuccess();
       onClose();
     } catch (error: any) {
-      // LẤY LỖI CHI TIẾT TỪ BACKEND
       const message = error.response?.data?.message || 'Có lỗi xảy ra khi kết nối đến máy chủ.';
       setServerError(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePhoneBlur = async (phoneInput: string) => {
+    if (!phoneInput || phoneInput.length < 10) return;
+
+    try {
+        const response: any = await getCustomers({ searchTerm: phoneInput, pageIndex: 1, pageSize: 1 } as any);
+        const customer = response.items && response.items.length > 0 ? response.items[0] : null;
+        if (customer) {
+            setCustomerName(customer.fullName || "");
+            const custAddress = customer.address || customer.shippingAddress || "";
+            setAddress(custAddress);
+            setCustomerId(customer.id);
+        }
+    } catch (error) {
+        console.log("Khách hàng mới.");
     }
   };
 
@@ -164,18 +183,32 @@ export default function AddWarrantyForm({ isOpen, onClose, onSuccess }: AddWarra
           <div className={styles.row}>
             <div className={styles.formGroup}>
               <label>Số điện thoại *</label>
-              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} required/>
+              <input 
+                  type="text" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)}
+                  onBlur={(e) => handlePhoneBlur(e.target.value)} 
+                  placeholder="Nhập SĐT..."
+                />
             </div>
             <div className={styles.formGroup}>
               <label>Tên khách hàng *</label>
-              <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required/>
+              <input 
+                  type="text" 
+                  value={customerName} 
+                  onChange={(e) => setCustomerName(e.target.value)} 
+                />
             </div>
           </div>
 
           <div className={styles.row}>
             <div className={styles.formGroup} style={{ flex: 1 }}>
               <label>Địa chỉ</label>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} required/>
+              <input 
+                  type="text" 
+                  value={address} 
+                  onChange={(e) => setAddress(e.target.value)} 
+                />
             </div>
           </div>
 

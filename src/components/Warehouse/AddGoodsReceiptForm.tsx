@@ -143,6 +143,7 @@ export default function AddGoodsReceiptForm({
         productGroups: details.map((d) => ({
           productId: d.productId,
           serials: d.serials,
+          price:d.importPrice
         })),
       };
       await createGoodsReceipt(payload);

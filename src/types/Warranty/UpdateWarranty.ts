@@ -9,6 +9,7 @@ export interface EditWarrantyItem {
   timelines: any[];
   sentToVendorDate: string;
   receivedFromVendorDate: string;
+  isLoan?: boolean;
 }
 
 export interface UpdateWarrantyDTO {
