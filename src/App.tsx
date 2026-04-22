@@ -21,12 +21,11 @@ import GoodsIssuePage from "./components/Warehouse/GoodsIssuePage";
 import GoodsIssueDetailPage from "./components/Warehouse/GoodsIssueDetailPage";
 import ProductDetailPage from "./components/Product/ProductDetailPage";
 import CustomerDetailPage from './components/Customer/CustomerDetailPage';
-
+import WarrantyWarningList from './components/Warranty/WarrantyWarningList';
 
 const HomePage = () => (
-  <div style={{ padding: "20px", textAlign: "center" }}>
-    <h2>Chào mừng đến với hệ thống CAG PRO</h2>
-    <p>Vui lòng chọn menu phía trên để bắt đầu làm việc.</p>
+  <div style={{ padding: "20px" }}>
+    <WarrantyWarningList />
   </div>
 );
 

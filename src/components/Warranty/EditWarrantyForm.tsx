@@ -6,21 +6,15 @@ import {
     getProductBySerial, 
     getAvailableSerials, 
     exchangeMachine,
-    loanMachine 
+    loanMachine,
+    ReturnloanMachine 
 } from '../../services/Warranty/warrantyService';
 import { useWarrantyValidation } from '../../hooks/useWarrantyValidation'; 
 import WarrantyItemTable from './WarrantyItemTable';
-
-interface EditWarrantyItem {
-  id?: number;
-  serialNumberId: string;
-  productName: string;
-  issueDescription: string;
-  warrantyCost: number;
-  sentToVendorDate: string;
-  receivedFromVendorDate: string;
-  productId?: number; 
-}
+import {
+        type EditWarrantyItem,
+        type UpdateWarrantyDTO
+} from '../../types/Warranty/UpdateWarranty';
 
 interface EditWarrantyFormProps {
   isOpen: boolean;
@@ -32,10 +26,11 @@ interface EditWarrantyFormProps {
 export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSuccess }: EditWarrantyFormProps) {
   const [phone, setPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [address, setAddress] = useState('');
+  const [returnLocation, setreturnLocation] = useState('');
   const [receiveLocation, setReceiveLocation] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [status, setStatus] = useState(1);
+  const [loanReturnDate, setLoanReturnDate] = useState("");
   
   const [items, setItems] = useState<EditWarrantyItem[]>([]);
   const [backendError, setBackendError] = useState<string | null>(null);
@@ -56,6 +51,8 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
   const [loanNote, setLoanNote] = useState('');
 
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0);
+
   const { validateDuplicate } = useWarrantyValidation();
 
   useEffect(() => {
@@ -66,34 +63,41 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
   }, [isOpen, warrantyId]);
 
   const loadWarrantyData = async (id: number) => {
-    setIsLoading(true);
-    try {
-      const response = await getWarrantyById(id);
-      const d = response.data?.data || response.data;
-      if (d) {  
-        setPhone(d.phone || '');
-        setCustomerName(d.customerName || '');
-        setAddress(d.address || '');
-        setReceiveLocation(d.receiveLocation || '');
-        setReturnDate(d.returnDate ? d.returnDate.split('T')[0] : '');
-        setStatus(d.status || 1);
-        setItems(d.details.map((item: any) => ({
-          id: item.id || item.warrantyCardDetailId || item.Id,
-          serialNumberId: item.serialCode || item.serialNumberId?.toString(),
-          productId: item.productId,
-          productName: item.productName || 'Sản phẩm hiện tại',
-          issueDescription: item.issueDescription || '',
-          warrantyCost: item.warrantyCost || 0,
-          sentToVendorDate: item.sentToVendorDate ? item.sentToVendorDate.split('T')[0] : '',
-          receivedFromVendorDate: item.receivedFromVendorDate ? item.receivedFromVendorDate.split('T')[0] : '',
-        })));
-      }
-    } catch (error) {
-      setBackendError("Không thể tải dữ liệu phiếu bảo hành.");
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const response = await getWarrantyById(id);
+    const d = response.data?.data || response.data;
+    
+    if (d) {
+      setPhone(d.phone || '');
+      setCustomerName(d.customerName || '');
+      setreturnLocation(d.returnLocation || '');
+      setReceiveLocation(d.receiveLocation || '');
+      setReturnDate(d.returnDate ? d.returnDate.split('T')[0] : '');
+      setStatus(d.status || 1);
+
+      const mappedItems: EditWarrantyItem[] = d.details.map((item: any) => ({
+        id: item.id,
+        serialNumberId: item.serialCode,
+        productId: item.productId,
+        productName: item.productName || 'Sản phẩm hiện tại',
+        issueDescription: item.issueDescription || '',
+        warrantyCost: item.warrantyCost || 0,
+        processingType: item.processingType,
+        isLoan: item.isLoan || false,
+        timelines: item.timelines || [],
+        sentToVendorDate: item.sentToVendorDate ? item.sentToVendorDate.split('T')[0] : '',
+        receivedFromVendorDate: item.receivedFromVendorDate ? item.receivedFromVendorDate.split('T')[0] : '',
+      }));
+      
+      setItems(mappedItems);
     }
-  };
+  } catch (error) {
+    setBackendError("Không thể tải dữ liệu.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleOpenExchange = async (index: number, oldSerialCode: string, productId: number, detailId: number) => {
     try {
@@ -137,6 +141,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
         setFilteredList(rawList);
         setExchangeTarget({ ...exchangeTarget, detailId: detailId, oldSerialCode: oldSerialCode });
         setLoanNote('');
+        setLoanReturnDate('');
         setIsLoanModalOpen(true);
     } catch (error) {
         alert("Không lấy được danh sách máy kho!");
@@ -149,9 +154,17 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
         await loanMachine({
             detailId: exchangeTarget.detailId,
             loanSerialId: machine.serialNumberId,
-            note: loanNote || "Cho mượn máy dùng tạm trong lúc chờ sửa chữa."
+            note: loanNote || "Cho mượn máy dùng tạm trong lúc chờ sửa chữa.",
+            returnDate: new Date(loanReturnDate)
         });
         alert("Đã lập phiếu mượn máy!");
+        setItems((prevItems: any[]) => 
+            prevItems.map((item) => 
+                item.id === exchangeTarget.detailId 
+                    ? { ...item, isLoan: true }
+                    : item
+            )
+        );
         setIsLoanModalOpen(false);
         onSuccess();
         onClose();
@@ -161,35 +174,39 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
 };
 
   const handleConfirmSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBackendError(null);
-    if (!window.confirm("Xác nhận lưu các thay đổi của phiếu?")) return;
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        phone: phone.trim(),
-        customerName: customerName.trim(),
-        address: address.trim(),
-        receiveLocation: receiveLocation.trim(),
-        returnDate: returnDate ? new Date(returnDate).toISOString() : null,
-        status: status,
-        details: items.map(i => ({
-          id: i.id,
-          serialNumberId: Number(i.productId),
-          issueDescription: (i.issueDescription || '').trim(),
-          warrantyCost: Number(i.warrantyCost),
-          sentToVendorDate: i.sentToVendorDate ? new Date(i.sentToVendorDate).toISOString() : null,
-          receivedFromVendorDate: i.receivedFromVendorDate ? new Date(i.receivedFromVendorDate).toISOString() : null
-        }))
-      };
-      await updateWarranty(warrantyId!, payload);
-      alert("Cập nhật thông tin phiếu thành công!");
-      onSuccess();
-      onClose();
-    } catch (error: any) {
-      setBackendError(error.response?.data?.message || "Lỗi cập nhật dữ liệu.");
-    } finally { setIsSubmitting(false); }
-  };
+  e.preventDefault();
+  if (!window.confirm("Xác nhận lưu thay đổi?")) return;
+
+  setIsSubmitting(true);
+  try {
+    const payload: UpdateWarrantyDTO = {
+      phone: phone.trim(),
+      customerName: customerName.trim(),
+      returnLocation: returnLocation.trim(),
+      receiveLocation: receiveLocation.trim(),
+      returnDate: returnDate ? new Date(returnDate).toISOString() : null,
+      status: status,
+      details: items.map(i => ({
+        id: i.id,
+        serialNumberId: Number(i.productId),
+        issueDescription: i.issueDescription.trim(),
+        processingType: i.processingType || "Tiếp nhận",
+        warrantyCost: Number(i.warrantyCost),
+        sentToVendorDate: i.sentToVendorDate ? new Date(i.sentToVendorDate).toISOString() : null,
+        receivedFromVendorDate: i.receivedFromVendorDate ? new Date(i.receivedFromVendorDate).toISOString() : null
+      }))
+    };
+
+    await updateWarranty(warrantyId!, payload);
+    alert("Cập nhật thành công!");
+    onSuccess();
+    onClose();
+  } catch (error: any) {
+    setBackendError(error.response?.data?.message || "Lỗi cập nhật.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleKeyDown = async (e: React.KeyboardEvent, index: number) => {
     if (e.key === 'Enter') {
@@ -216,7 +233,26 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
     setItems(newItems);
   };
 
-  const addItem = () => setItems([...items, { serialNumberId: '', productName: '', issueDescription: '', warrantyCost: 0, sentToVendorDate: '', receivedFromVendorDate: '' }]);
+
+  const handleReturnLoan = async (detailId: number) => {
+      if (!window.confirm("Bạn có chắc chắn muốn thu hồi máy mượn này không?")) {
+          return;
+      }
+      try {
+          const response = await ReturnloanMachine(detailId);
+          
+          setItems(prev => prev.map(item => 
+            item.id === detailId ? { ...item, isLoan: false } : item
+            ));
+            alert("Thu hồi thành công");
+            window.location.reload(); 
+          
+      } catch (error: any) {
+          alert(error.response?.data?.message || "Lỗi khi thu hồi máy mượn");
+      }
+  };
+
+  const addItem = () => setItems([...items, { serialNumberId: '', productName: '', issueDescription: '', warrantyCost: 0, sentToVendorDate: '', receivedFromVendorDate: '',processingType: 'Tiếp nhận',timelines: [] }]);
   const removeItem = (index: number) => { if (items.length > 1) setItems(items.filter((_, i) => i !== index)); };
 
   if (!isOpen) return null;
@@ -246,13 +282,12 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
                   <option value={1}>1. Tiếp nhận</option>
                   <option value={2}>2. Đang xử lý</option>
                   <option value={3}>3. Hoàn thành</option>
-                  <option value={4}>4. Hủy bỏ</option>
                 </select>
               </div>
             </div>
 
             <div className={styles.row}>
-              <div className={styles.formGroup} style={{ flex: 1.5 }}><label>Địa chỉ</label><input type="text" value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+              <div className={styles.formGroup} style={{ flex: 1.5 }}><label>Địa chỉ</label><input type="text" value={returnLocation} onChange={(e) => setreturnLocation(e.target.value)} /></div>
               <div className={styles.formGroup}><label>Nơi nhận</label><input type="text" value={receiveLocation} onChange={(e) => setReceiveLocation(e.target.value)} /></div>
               <div className={styles.formGroup}><label>Hẹn trả ngày</label><input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} /></div>
             </div>
@@ -269,8 +304,10 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
               removeItem={removeItem}
               onExchangeClick={handleOpenExchange} 
               onLoanClick={handleOpenLoan} 
+              onReturnLoanClick={handleReturnLoan}
+              onRowClick={(index: number) => setSelectedItemIndex(index)} selectedIndex={selectedItemIndex}
             />
-
+            
             <div style={{ textAlign: 'right', padding: '15px', fontWeight: 'bold', fontSize: '16px', color: '#e31e24' }}>
               TỔNG CHI PHÍ: {items.reduce((sum, i) => sum + (Number(i.warrantyCost) || 0), 0).toLocaleString()} VNĐ
             </div>
@@ -302,6 +339,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
                   }}
                 />
             </div>
+
             <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Phí bù thêm / Hoàn trả (VNĐ):</label>
                 <input type="text" value={upgradeFee.toLocaleString()} onChange={(e) => setUpgradeFee(Number(e.target.value.replace(/\D/g, "")))} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '6px' }} />
@@ -310,6 +348,7 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Ghi chú đổi trả:</label>
                 <textarea value={exchangeNote} onChange={(e) => setExchangeNote(e.target.value)} placeholder="Lý do đổi..." style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '6px', height: '60px', resize: 'none' }} />
             </div>
+
             <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', background: '#f9f9f9' }}>
               {filteredList.map((m: any, idx: number) => (
                 <div key={idx} onClick={() => confirmExchange(m)} style={{ padding: '12px', borderBottom: '1px solid #fff', cursor: 'pointer' }} onMouseOver={(e) => (e.currentTarget.style.background = '#e0f2fe')} onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}>
@@ -323,12 +362,11 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
         </div>
       )}
 
-      {/* MODAL CHO MƯỢN MÁY TẠM THỜI */}
       {isLoanModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'white', padding: '25px', borderRadius: '12px', width: '500px', boxShadow: '0 5px 20px rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-              <h3 style={{ margin: 0, color: '#a855f7' }}>🤝 Cho mượn máy dùng tạm</h3>
+              <h3 style={{ margin: 0, color: '#a855f7' }}> Cho mượn máy dùng tạm</h3>
               <button onClick={() => setIsLoanModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
             </div>
             <p style={{ fontSize: '14px', marginBottom: '15px' }}>Mượn máy cho dòng: <strong style={{ color: '#a855f7' }}>{exchangeTarget.oldSerialCode}</strong></p>
@@ -342,8 +380,18 @@ export default function EditWarrantyForm({ isOpen, warrantyId, onClose, onSucces
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Ngày hẹn trả máy mượn *:</label>
+              <input 
+                type="date" 
+                required
+                value={loanReturnDate}
+                onChange={(e) => setLoanReturnDate(e.target.value)} 
+                style={{ width: '100%', padding: '10px', border: '1px solid #a855f7', borderRadius: '6px', outline: 'none' }} 
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>Ghi chú mượn:</label>
-              <textarea placeholder="Tình trạng máy mượn..." style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', height: '80px', resize: 'none' }} onChange={(e) => setLoanNote(e.target.value)} />
+              <textarea placeholder="Tình trạng máy mượn..." style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', height: '80px', resize: 'none' }} onChange={(e) => setLoanNote(e.target.value)} required/>
             </div>
             <div style={{ maxHeight: '200px', overflowY: 'auto', background: '#f8fafc', borderRadius: '6px', border: '1px solid #eee' }}>
               {filteredList.map((m: any, idx: number) => (
