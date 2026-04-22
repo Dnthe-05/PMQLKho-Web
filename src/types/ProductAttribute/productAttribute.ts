@@ -1,4 +1,5 @@
 export interface AttributeDetail {
+  attributeId: number;
   name: string;
   value: string;
   unit?: string;
