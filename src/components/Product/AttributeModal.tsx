@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../../css/Product/AttributeModal.module.css'; 
+import Select from 'react-select';
 
 interface AttributeModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AttributeModalProps {
   initialData?: { name: string; parentId?: number | null; parentName?: string; unit?: string } | null;
   parentOptions?: Array<{ id: number; name: string }>;
 }
+
 
 export default function AttributeModal({ isOpen, onClose, onSave, title, initialData, parentOptions = [] }: AttributeModalProps) {
   const [name, setName] = useState('');
@@ -48,28 +50,27 @@ export default function AttributeModal({ isOpen, onClose, onSave, title, initial
         </div>
 
         {title === 'Danh mục' && (
-          <div className={styles.formGroup}>
-            <label>Danh mục cha (tùy chọn):</label>
-            <input
-              type="text"
-              list="categoryParentOptions"
-              value={parentText}
-              onChange={(e) => {
-                const value = e.target.value;
-                setParentText(value);
-                const match = parentOptions.find((opt) => opt.name === value);
-                setParentId(match ? match.id : null);
-              }}
-              placeholder="Nhập hoặc chọn danh mục cha..."
-            />
-            <datalist id="categoryParentOptions">
-              {parentOptions.map((category) => (
-                <option key={category.id} value={category.name} />
-              ))}
-            </datalist>
-            <p className={styles.helpText}>Nhập hoặc chọn danh mục cha; để trống nếu muốn danh mục gốc.</p>
-          </div>
-        )}
+        <div className={styles.formGroup}>
+          <label>Danh mục cha (tùy chọn):</label>
+          <Select
+            placeholder="-- Chọn danh mục cha --"
+            isClearable // Cho phép nhấn dấu X để xóa trắng (về danh mục gốc)
+            options={parentOptions.map(opt => ({ value: opt.id, label: opt.name }))}
+            value={
+              parentId 
+                ? { value: parentId, label: parentOptions.find(o => o.id === parentId)?.name || '' } 
+                : null
+            }
+            onChange={(opt: any) => {
+              setParentId(opt ? opt.value : null);
+              setParentText(opt ? opt.label : '');
+            }}
+            // Thêm style nếu cần giống giao diện hiện tại
+            classNamePrefix="react-select"
+          />
+          <p className={styles.helpText}>Chọn danh mục cha; để trống nếu muốn đây là danh mục gốc.</p>
+        </div>
+      )}
 
         {title === 'Thuộc tính' && (
           <div className={styles.formGroup}>

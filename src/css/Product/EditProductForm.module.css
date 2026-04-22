@@ -272,3 +272,33 @@
   width: 100%;
   height: 10px; /* Tạo cầu nối 10px để rê chuột mượt hơn */
 }
+.btnQuickAdd {
+  background-color: #ff4d4f; /* Màu đỏ chủ đạo */
+  border: 1px solid #ff4d4f; /* Khung màu đỏ */
+  color: #ffffff;            /* Chữ màu trắng */
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;         /* Tạo khoảng cách bên trong để tạo thành hình cái nút */
+  border-radius: 4px;        /* Bo góc nhẹ cho đẹp */
+  transition: all 0.3s ease; /* Hiệu ứng mượt mà khi hover */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnQuickAdd:hover {
+  background-color: #cf1322; /* Đỏ đậm hơn khi hover */
+  border-color: #cf1322;     /* Khung cũng đậm hơn */
+  color: #ffffff;            /* Giữ chữ màu trắng */
+  text-decoration: none;     /* Bỏ gạch chân vì đã có nền màu */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Thêm bóng đổ nhẹ cho chuyên nghiệp */
+}
+
+/* Nếu bạn muốn nút nhỏ hơn một chút cho phần Attributes */
+.btnQuickAddSmall {
+  composes: btnQuickAdd; /* Kế thừa từ btnQuickAdd nếu dùng CSS Modules */
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
