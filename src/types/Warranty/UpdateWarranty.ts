@@ -1,19 +1,30 @@
-export interface UpdateWarrantyDetailDTO {
+export interface EditWarrantyItem {
   id?: number;
-  serialNumberId: number;
-  productName?: string;
+  serialNumberId: string;
+  productId?: number;
+  productName: string;
   issueDescription: string;
   warrantyCost: number;
-  sentToVendorDate?: string | null;
-  receivedFromVendorDate?: string | null;
+  processingType: string;
+  timelines: any[];
+  sentToVendorDate: string;
+  receivedFromVendorDate: string;
+  isLoan?: boolean;
 }
 
 export interface UpdateWarrantyDTO {
   phone: string;
   customerName: string;
-  address?: string;
+  returnLocation?:string;
   receiveLocation?: string;
   returnDate?: string | null;
   status: number;
-  details: UpdateWarrantyDetailDTO[];
+  details: {
+    id?: number;
+    serialNumberId: number;
+    issueDescription: string;
+    warrantyCost: number;
+    sentToVendorDate?: string | null;
+    receivedFromVendorDate?: string | null;
+  }[];
 }

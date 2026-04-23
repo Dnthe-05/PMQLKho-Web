@@ -33,10 +33,8 @@ const WarrantyTable: React.FC<WarrantyTableProps> = ({ data }) => {
         return <span style={{ ...badgeStyle, background: '#e0f2fe', color: '#0284c7' }}>Tiếp nhận</span>;
       case 2:
         return <span style={{ ...badgeStyle, background: '#ffedd5', color: '#c2410c' }}>Đang xử lý</span>;
-      case 3:
-        return <span style={{ ...badgeStyle, background: '#dcfce7', color: '#16a34a' }}>Hoàn thành</span>;
       default:
-        return <span style={{ ...badgeStyle, background: '#fee2e2', color: '#dc2626' }}>Đã hủy</span>;
+        return <span style={{ ...badgeStyle, background: '#dcfce7', color: '#16a34a' }}>Hoàn thành</span>;
     }
   };
 

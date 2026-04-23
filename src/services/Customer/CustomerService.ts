@@ -19,7 +19,7 @@ export const updateCustomer = async (id: number, data: CustomerLoad) => {
 };
 
 export const deleteCustomer = async (id: number) => {
-    const response = await axiosClient.patch(`/api/Customer/${id}`);
+    const response = await axiosClient.delete(`/api/Customer/${id}`);
     return response.data;
 };
 

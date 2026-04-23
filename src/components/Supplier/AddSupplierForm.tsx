@@ -137,7 +137,6 @@ export default function AddSupplierForm({ isOpen, onClose, onSuccess }: Props) {
               type="email" 
               value={formData.EmailNcc}
               placeholder="VD: contact@cagpro.com" 
-              required
               onChange={e => setFormData({...formData, EmailNcc: e.target.value})} 
             />
             {fieldErrors.EmailNcc && <span className={styles.errorText}>{fieldErrors.EmailNcc}</span>}

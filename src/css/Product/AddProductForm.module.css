@@ -227,3 +227,83 @@
   border-color: #e31e24 !important;
   background-color: #fffafa !important;
 }
+
+.btnQuickAddLink {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.btnQuickAddLink:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Đảm bảo các hàng (row) luôn dàn ngang đều */
+.row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: flex-start; /* Để các ô không bị kéo dài khi có nút + Mới */
+}
+
+/* Container chứa label và nút bấm */
+.labelHeader {
+  display: flex;
+  justify-content: space-between; /* Đẩy label sang trái, nút sang phải */
+  align-items: center;
+  margin-bottom: 8px; /* Khoảng cách với ô Select */
+}
+
+.labelHeader label {
+  margin-bottom: 0; /* Ghi đè margin mặc định của label */
+}
+
+.btnQuickAddRed {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;       
+  cursor: pointer;
+  font-weight: 500;
+  margin-left: auto;     
+  line-height: 1;         
+  display: flex;       
+  align-items: center;
+}
+
+.btnQuickAddRed:hover {
+  opacity: 0.8;
+}
+
+.btnQuickAddRed:active {
+  background-color: #d9363e; /* Đỏ đậm hẳn khi nhấn xuống */
+  border-color: #d9363e;
+  transform: translateY(0);    /* Trở về vị trí cũ khi nhấn */
+}
+
+.labelWithBtn {
+  display: flex;           
+  align-items: center;     
+  justify-content: flex-start;
+  margin-bottom: 8px;      
+  width: 100%;            
+}
+
+.labelWithBtn label {
+  margin-bottom: 0;        
+  white-space: nowrap;     
+}
+
+.formGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}

@@ -7,4 +7,6 @@ export interface WarrantyList {
   returnDate?: string;
   status: number;
   totalCost: number;
+  returnLocation?: string;
+  receiveLocation?: string;
 }

@@ -1,8 +1,8 @@
 export interface LifecycleEvent {
-    date: string;
-    actionType: number;
+    actionDate: string;
+    actionName: number;
     description: string;
-    customer: string;
+    customerName?: string;
 }
 
 export interface MachineLifecycle {
