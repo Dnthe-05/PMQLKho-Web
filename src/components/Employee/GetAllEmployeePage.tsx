@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getEmployees, deleteEmployee } from '../../services/Employee/EmployeeService';
 import { type Employee } from '../../types/Employee/Employee';
 import { type EmployeeFilter } from '../../types/Employee/EmployeeFilter';
-
+import { useNavigate } from 'react-router-dom';
 
 import EmployeeTable from './EmployeeTable';
 import EmployeeSidebar from './EmployeeSidebar';
@@ -15,6 +15,9 @@ import Button from '../Common/Button';
 import Pagination from '../Pagination';
 
 const GetAllEmployeePage = () => {
+
+  const navigate = useNavigate();
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filters, setFilters] = useState<EmployeeFilter>({ isActive: true });
   const [loading, setLoading] = useState(false);
@@ -128,6 +131,7 @@ const GetAllEmployeePage = () => {
             loading={loading} 
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
+            onView={(id) => navigate(`/nhan-vien/chi-tiet/${id}`)}
             currentPage={currentPage}
             pageSize={pageSize}
           />

@@ -22,3 +22,8 @@ export const deleteEmployee = async (id: number) => {
     const response = await axiosClient.delete(`/api/Employee/${id}`);
     return response.data;
 };
+
+export const getEmployeeById = async (id: number) => {
+    const response = await axiosClient.get(`/api/Employee/${id}`);
+    return response;
+};

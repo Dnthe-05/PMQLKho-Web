@@ -8,11 +8,12 @@ interface EmployeeTableProps {
   loading: boolean;
   onEdit: (employee: Employee) => void;
   onDelete: (id: number) => void;
+  onView: (id: number) => void;
   currentPage: number; 
   pageSize: number;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete, currentPage, pageSize }) => {
+const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, onDelete, onView, currentPage, pageSize }) => {
   const safeData = data || [];
 
 
@@ -99,6 +100,15 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, loading, onEdit, on
                   {/* Hoạt động */}
                   <td className={styles.td} style={{ textAlign: 'center' }}>
                     <div className="flex justify-center gap-2">
+
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ color: '#0284c7' }}
+                        onClick={() => onView(item.id)}
+                      >
+                        Xem
+                      </button>
+
                       {!isDeleted && (
                       <button 
                         className={styles.actionBtn} 

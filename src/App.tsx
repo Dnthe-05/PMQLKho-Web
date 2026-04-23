@@ -21,6 +21,7 @@ import GoodsIssuePage from "./components/Warehouse/GoodsIssuePage";
 import GoodsIssueDetailPage from "./components/Warehouse/GoodsIssueDetailPage";
 import ProductDetailPage from "./components/Product/ProductDetailPage";
 import CustomerDetailPage from './components/Customer/CustomerDetailPage';
+import EmployeeDetailPage from "./components/Employee/EmployeeDetailPage";
 
 
 const HomePage = () => (
@@ -239,6 +240,14 @@ const App = () => {
         <Route path="/khach-hang/chi-tiet/:id" element={
           user ? (
              <MainLayout user={user}><CustomerDetailPage /></MainLayout>
+           ) : (
+             <Navigate to="/login" replace />
+           )
+        } />
+
+        <Route path="/nhan-vien/chi-tiet/:id" element={
+          user ? (
+             <MainLayout user={user}><EmployeeDetailPage /></MainLayout>
            ) : (
              <Navigate to="/login" replace />
            )
