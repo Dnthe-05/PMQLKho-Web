@@ -265,16 +265,18 @@
 }
 
 .btnQuickAddRed {
-  background-color: #ff4d4f; /* Màu đỏ như trong hình của bạn */
+  background-color: #ff4d4f;
   color: white;
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;           /* Chữ nhỏ gọn */
+  font-size: 11px;       
   cursor: pointer;
-  transition: opacity 0.2s;
   font-weight: 500;
-  margin-left: auto;         /* Lực đẩy bổ sung để chắc chắn nằm bên phải */
+  margin-left: auto;     
+  line-height: 1;         
+  display: flex;       
+  align-items: center;
 }
 
 .btnQuickAddRed:hover {
@@ -288,11 +290,16 @@
 }
 
 .labelWithBtn {
-  display: flex;             /* Kích hoạt flexbox */
-  justify-content: space-between; /* Đẩy label sang trái, button sang phải */
-  align-items: center;       /* Căn giữa theo chiều dọc */
-  margin-bottom: 8px;        /* Khoảng cách với ô Select bên dưới */
-  width: 100%;               /* Đảm bảo chiếm hết chiều ngang của formGroup */
+  display: flex;           
+  align-items: center;     
+  justify-content: flex-start;
+  margin-bottom: 8px;      
+  width: 100%;            
+}
+
+.labelWithBtn label {
+  margin-bottom: 0;        
+  white-space: nowrap;     
 }
 
 .formGroup {

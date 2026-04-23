@@ -99,30 +99,39 @@ const openAddAttributeModal = (index: number) => {
 };
 
   const handleQuickAddSave = async (payload: any) => {
-    try {
-      let res: any;
-      if (attrModalType === 'category') res = await createCategory(payload);
-      else if (attrModalType === 'brand') res = await createBrand(payload);
-      else if (attrModalType === 'unit') res = await createUnit('unit', payload);
-      else if (attrModalType === 'attribute') res = await createAttribute('attribute', payload);
+  try {
+    let res: any;
+    if (attrModalType === 'category') res = await createCategory(payload);
+    else if (attrModalType === 'brand') res = await createBrand(payload);
+    else if (attrModalType === 'unit') res = await createUnit('unit', payload);
+    else if (attrModalType === 'attribute') res = await createAttribute('attribute', payload);
 
-      const newId = res?.id || res?.data?.id;
-      if (newId) {
-        await refreshAllData(); 
-        
-        if (attrModalType === 'attribute' && activeAttributeIndex !== null) {
-          handleAttributeChange(activeAttributeIndex, 'attributeId', String(newId));
-        } else {
-          const fieldMap = { category: 'CategoryId', brand: 'BrandId', unit: 'UnitId' };
-          setFormData(prev => ({ ...prev, [fieldMap[attrModalType as keyof typeof fieldMap]]: String(newId) }));
-        }
-        alert("Thêm mới thành công!");
+    const newId = res?.id || res?.data?.id;
+    if (newId) {
+      // 1. Vẫn refresh để các dòng khác có data mới trong dropdown
+      await refreshAllData(); 
+      
+      if (attrModalType === 'attribute' && activeAttributeIndex !== null) {
+        // 2. SỬA TẠI ĐÂY: Cập nhật trực tiếp State thay vì gọi handleAttributeChange
+        setAttributeRows(prev => prev.map((row, idx) => {
+          if (idx !== activeAttributeIndex) return row;
+          return { 
+            ...row, 
+            attributeId: String(newId), 
+            unit: payload.unit || '' // Lấy đơn vị trực tiếp từ Modal truyền lên
+          };
+        }));
+      } else {
+        const fieldMap = { category: 'CategoryId', brand: 'BrandId', unit: 'UnitId' };
+        setFormData(prev => ({ ...prev, [fieldMap[attrModalType as keyof typeof fieldMap]]: String(newId) }));
       }
-      setIsAttrModalOpen(false);
-    } catch (error) {
-      alert("Lỗi khi thêm nhanh!");
+      alert("Thêm mới thành công!");
     }
-  };
+    setIsAttrModalOpen(false);
+  } catch (error) {
+    alert("Lỗi khi thêm nhanh!");
+  }
+};
 
   const addAttributeRow = () => setAttributeRows([...attributeRows, emptyAttributeRow()]);
   const removeAttributeRow = (index: number) => setAttributeRows(prev => prev.filter((_, idx) => idx !== index));
