@@ -135,11 +135,11 @@ export default function EmployeeDetailPage() {
                 ) : ( <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Nhân viên này chưa lập phiếu xuất nào.</td></tr> )}
               </tbody>
             </table>
-            {employee.goodsIssues?.length > 0 && (
+            {/* {employee.goodsIssues?.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
                 <button onClick={() => navigate(`/xuat-kho?searchTerm=${employee.fullName}`)} style={{ background: 'transparent', color: '#0284c7', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Xem tất cả phiếu xuất &rarr;</button>
               </div>
-            )}
+            )} */}
           </div>
         )}
 
@@ -172,11 +172,11 @@ export default function EmployeeDetailPage() {
                 ) : ( <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Nhân viên này chưa lập phiếu nhập nào.</td></tr> )}
               </tbody>
             </table>
-            {employee.goodsReceipts?.length > 0 && (
+            {/* {employee.goodsReceipts?.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
                 <button onClick={() => navigate(`/nhap-kho?searchTerm=${employee.fullName}`)} style={{ background: 'transparent', color: '#0284c7', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Xem tất cả phiếu nhập &rarr;</button>
               </div>
-            )}
+            )} */}
           </div>
         )}
 
@@ -209,11 +209,11 @@ export default function EmployeeDetailPage() {
                 ) : ( <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>Nhân viên này chưa xử lý bảo hành nào.</td></tr> )}
               </tbody>
             </table>
-            {employee.warrantyCards?.length > 0 && (
+            {/* {employee.warrantyCards?.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #eee' }}>
                 <button onClick={() => navigate(`/bao-hanh?searchTerm=${employee.fullName}`)} style={{ background: 'transparent', color: '#0284c7', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Xem tất cả phiếu bảo hành &rarr;</button>
               </div>
-            )}
+            )} */}
           </div>
         )}
       </div>
