@@ -18,7 +18,7 @@ export default function CustomerDetailPage() {
   const fetchDetail = async () => {
     try {
       const response = await getCustomerById(Number(id));
-      setCustomer(response.data?.data || response.data);
+      setCustomer(response);
     } catch (error) {
       console.error("Lỗi tải chi tiết khách hàng:", error);
       alert("Không tìm thấy dữ liệu khách hàng!");

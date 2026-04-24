@@ -78,11 +78,9 @@ const GetAllCustomerPage = () => {
     if (!customerToDelete) return;
 
     try {
-      const res: any = await deleteCustomer(customerToDelete);
-      if (res) {
-        alert("Xóa khách hàng thành công!");
-        fetchCustomers();
-      }
+      await deleteCustomer(customerToDelete);
+      alert("Xóa khách hàng thành công!");
+      fetchCustomers();
     } catch (error: any) {
       alert(error.response?.data?.message || "Có lỗi xảy ra!");
     } finally {

@@ -69,7 +69,10 @@ const mapErrorToFields = (message: string) => {
 
     try {
       const finalData = { 
-        ...formData, 
+        ...formData,
+        Username: formData.Username.trim(),
+        FullName: formData.FullName.trim(),
+        Password: formData.Password.trim(), 
         Role: Number(formData.Role) 
       };
 

@@ -12,13 +12,13 @@ export default function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
-  // Quản lý Tab: 3 trạng thái
+
   const [activeTab, setActiveTab] = useState<'goodsIssues' | 'goodsReceipts' | 'warranties'>('goodsIssues');
 
   const fetchDetail = async () => {
     try {
       const response = await getEmployeeById(Number(id));
-      setEmployee(response.data?.data || response.data);
+      setEmployee(response);
     } catch (error) {
       console.error("Lỗi tải chi tiết nhân viên:", error);
       alert("Không tìm thấy dữ liệu nhân viên!");

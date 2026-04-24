@@ -78,6 +78,8 @@ export default function EditCustomerForm({ isOpen, onClose, onSuccess, customer 
     try {
       const payload = {
         ...formData,
+        FullName: formData.FullName.trim(),
+        Phone: formData.Phone.trim(),
         Email: formData.Email.trim() === "" ? undefined : formData.Email,
         ShippingAddress: formData.ShippingAddress.trim() === "" ? undefined : formData.ShippingAddress,
         ReturnAddress: formData.ReturnAddress.trim() === "" ? undefined : formData.ReturnAddress,

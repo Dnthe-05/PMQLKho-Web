@@ -84,11 +84,11 @@ const GetAllEmployeePage = () => {
     if (!employeeToDelete) return;
 
     try {
-      const res: any = await deleteEmployee(employeeToDelete);
-      if (res) {
-        alert("Xóa nhân viên thành công!");
-        fetchEmployees();
-      }
+      await deleteEmployee(employeeToDelete);
+      
+      alert("Xóa nhân viên thành công!");
+      fetchEmployees();
+      
     } catch (error: any) {
       alert(error.response?.data?.message || "Có lỗi xảy ra!");
     } finally {

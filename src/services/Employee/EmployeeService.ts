@@ -1,4 +1,5 @@
 import axiosClient from '../../API/axiosClient';
+import { type Employee, type EmployeeDetail } from '../../types/Employee/Employee';
 import { type EmployeeFilter } from '../../types/Employee/EmployeeFilter';
 import { type PagedEmployeeResponse } from '../../types/Employee/EmployeeResponse';
 import { type EmployeeLoad } from '../../types/Employee/EmployeeLoad'; 
@@ -8,22 +9,22 @@ export const getEmployees = async (filters: EmployeeFilter): Promise<PagedEmploy
     return response.data; 
 };
 
-export const createEmployee = async (data: EmployeeLoad) => {
+export const createEmployee = async (data: EmployeeLoad): Promise<Employee> => {
     const response = await axiosClient.post("/api/Employee", data);
     return response.data;
 };
 
-export const updateEmployee = async (id: number, data: EmployeeLoad) => {
+export const updateEmployee = async (id: number, data: EmployeeLoad): Promise<Employee> => {
     const response = await axiosClient.put(`/api/Employee/${id}`, data);
     return response.data;
 };
 
-export const deleteEmployee = async (id: number) => {
+export const deleteEmployee = async (id: number): Promise<void> => {
     const response = await axiosClient.delete(`/api/Employee/${id}`);
     return response.data;
 };
 
-export const getEmployeeById = async (id: number) => {
+export const getEmployeeById = async (id: number): Promise<EmployeeDetail> => {
     const response = await axiosClient.get(`/api/Employee/${id}`);
-    return response;
+    return response.data; 
 };

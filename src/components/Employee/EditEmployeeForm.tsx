@@ -80,8 +80,8 @@ export default function EditEmployeeForm({ isOpen, onClose, onSuccess, employee 
 
     try {
       const payload = {
-        FullName: formData.FullName,
-        Username: formData.Username,
+        FullName: formData.FullName.trim(),
+        Username: formData.Username.trim(),
         Role: Number(formData.Role)
       };
 

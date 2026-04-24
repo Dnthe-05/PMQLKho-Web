@@ -68,6 +68,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     try {
         const payload = {
           ...formData,
+          FullName: formData.FullName.trim(),
+          Phone: formData.Phone.trim(),
+          
           Email: formData.Email.trim() === "" ? undefined : formData.Email,
           ShippingAddress: formData.ShippingAddress.trim() === "" ? undefined : formData.ShippingAddress,
           ReturnAddress: formData.ReturnAddress.trim() === "" ? undefined : formData.ReturnAddress,
@@ -186,7 +189,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           <div className={styles.formActions}>
             <button type="button" onClick={handleClose} className={styles.btnCancel}>Hủy bỏ</button>
-            <button type="submit" onClick={handleSubmit} className={styles.btnSubmit}>
+            <button type="submit" className={styles.btnSubmit}>
               + Lưu khách hàng
             </button>
           </div>
