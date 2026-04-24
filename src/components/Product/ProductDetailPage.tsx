@@ -9,10 +9,14 @@ import styles from '../../css/Product/ProductDetailPage.module.css';
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const getFullImageUrl = (imagePath: string | undefined) => {
   if (!imagePath) return '/logo.png';
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
-  const normalizedBase = baseURL.replace(/\/+$/g, '');
-  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  return `${normalizedBase}${normalizedPath}`;
+  if (imagePath.startsWith('http')) return imagePath;
+
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+
+  if (cleanPath.startsWith('/uploads')) {
+    return cleanPath; 
+  }
+  return `/uploads/products${cleanPath}`;
 };
 
 const ProductDetailPage: React.FC = () => {

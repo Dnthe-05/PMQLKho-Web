@@ -9,6 +9,11 @@ export default defineConfig({
         target: 'https://apicagguide.icafevietnam.com:5200',
         changeOrigin: true,
         secure: false,
+      },
+      '/uploads': {
+        target: 'https://apicagguide.icafevietnam.com:5200',
+        changeOrigin: true,
+        secure: false,
       }
     }
   }
