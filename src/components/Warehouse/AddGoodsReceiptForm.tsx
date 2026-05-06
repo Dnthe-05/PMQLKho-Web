@@ -156,7 +156,7 @@ export default function AddGoodsReceiptForm({
           productId: d.productId,
           price: d.importPrice,
           serials: d.serials,
-          price:d.importPrice
+          // price:d.importPrice
         })),
       };
       await createGoodsReceipt(payload);

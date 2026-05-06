@@ -108,11 +108,10 @@ const openAddAttributeModal = (index: number) => {
 
     const newId = res?.id || res?.data?.id;
     if (newId) {
-      // 1. Vẫn refresh để các dòng khác có data mới trong dropdown
+
       await refreshAllData(); 
       
       if (attrModalType === 'attribute' && activeAttributeIndex !== null) {
-        // 2. SỬA TẠI ĐÂY: Cập nhật trực tiếp State thay vì gọi handleAttributeChange
         setAttributeRows(prev => prev.map((row, idx) => {
           if (idx !== activeAttributeIndex) return row;
           return { 
