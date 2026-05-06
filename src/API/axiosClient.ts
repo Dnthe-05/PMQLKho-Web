@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: '',
+  baseURL: import.meta.env.VITE_API_URL || 'https://apicagguide.icafevietnam.com:5200',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
